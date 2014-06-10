@@ -13,6 +13,9 @@ CONFIG += link_pkgconfig
 TARGET = viewmail
 TEMPLATE = app
 
+MOC_DIR = build
+OBJECTS_DIR = build
+DESTDIR = build
 
 SOURCES += main.cpp\
         mailview.cpp \

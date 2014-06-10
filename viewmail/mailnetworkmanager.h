@@ -1,7 +1,7 @@
 #ifndef MAILNETWORKMANAGER_H
 #define MAILNETWORKMANAGER_H
 
-#include <QNetworkAccessManager>
+#include <QtNetwork>
 
 class MailNetworkManager : public QNetworkAccessManager
 {

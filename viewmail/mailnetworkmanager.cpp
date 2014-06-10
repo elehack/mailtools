@@ -1,5 +1,7 @@
 #include "mailnetworkmanager.h"
 
+#include <QUrl>
+
 MailNetworkManager::MailNetworkManager(QObject *parent) :
     QNetworkAccessManager(parent)
 {
@@ -25,7 +27,7 @@ MailNetworkManager::createRequest(Operation op, const QNetworkRequest& req, QIOD
     QString scheme = url.scheme();
     if (scheme == "cid") {
     } else if (f_remoteEnabled) {
-        return super::createRequest(op, req, outgoingData);
+        return QNetworkAccessManager::createRequest(op, req, outgoingData);
     } else {
     }
 }
