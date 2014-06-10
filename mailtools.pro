@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,10 +16,12 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mailview.cpp \
-    htmlmail.cpp
+    htmlmail.cpp \
+    mailnetworkmanager.cpp
 
 HEADERS  += mailview.h \
-    htmlmail.h
+    htmlmail.h \
+    mailnetworkmanager.h
 
 PKGCONFIG += vmime
 QMAKE_CXXFLAGS += -std=gnu++11
