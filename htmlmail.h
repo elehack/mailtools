@@ -14,6 +14,21 @@ public:
 
     void dump();
 
+    const vmime::ref<vmime::message> getMessage() const;
+
+    /**
+     * @brief Get the body for a message.
+     * @return The message body (HTML if available).
+     */
+    vmime::ref<vmime::bodyPart> getBody();
+
+    /**
+     * @brief Get an attached part for a message.
+     * @param cid The attached part.
+     * @return The attachment identified by content-id CID.
+     */
+    vmime::ref<vmime::bodyPart> getRelatedPart(QString cid);
+
 signals:
 
 public slots:
