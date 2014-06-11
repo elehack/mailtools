@@ -2,6 +2,7 @@
 #define MAILVIEW_H
 
 #include <QMainWindow>
+#include <QUrl>
 
 class MailViewInternal;
 class HTMLMailMessage;
@@ -18,6 +19,9 @@ public:
 
 public slots:
     void browseToRoot();
+
+    void browseUrl(const QUrl& url);
+    void showUrl(const QString& link, const QString& title);
 
 private:
     MailViewInternal* const internal;
