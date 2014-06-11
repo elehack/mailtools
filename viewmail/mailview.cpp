@@ -21,7 +21,9 @@ MailView::MailView(QWidget *parent)
     internal->view = view;
     setCentralWidget(view);
     internal->page = view->page();
+#ifndef QT_NO_DEBUG
     internal->page->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
+#endif
     internal->page->settings()->setAttribute(QWebSettings::JavascriptEnabled, false);
 
     connect(view, SIGNAL(linkClicked(QUrl)), SLOT(browseUrl(QUrl)));
