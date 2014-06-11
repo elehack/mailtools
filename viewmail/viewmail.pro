@@ -20,11 +20,13 @@ DESTDIR = build
 SOURCES += main.cpp\
         mailview.cpp \
     htmlmail.cpp \
-    mailnetworkmanager.cpp
+    mailnetworkmanager.cpp \
+    statichttpreply.cpp
 
 HEADERS  += mailview.h \
     htmlmail.h \
-    mailnetworkmanager.h
+    mailnetworkmanager.h \
+    statichttpreply.h
 
 PKGCONFIG += vmime
 QMAKE_CXXFLAGS += -std=gnu++11

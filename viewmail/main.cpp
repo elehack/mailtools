@@ -8,6 +8,9 @@
 #include <iostream>
 #include <fstream>
 
+#include <QtNetwork>
+#include <QtCore>
+
 using vmime::utility::ref;
 
 int main(int argc, char *argv[])
