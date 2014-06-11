@@ -7,10 +7,25 @@
 
 using vmime::ref;
 
+static ref<vmime::mediaType>
+contentType(ref<vmime::bodyPart> message);
+static ref<vmime::bodyPart>
+getSinglePart(HTMLMailMessage* msg, ref<vmime::bodyPart> message);
+static ref<vmime::bodyPart>
+getPartById(HTMLMailMessage* msg, ref<vmime::bodyPart> message, QString cid);
 static ref<vmime::bodyPart>
 getRelatedRoot(HTMLMailMessage* msg, ref<vmime::bodyPart> message);
 static ref<vmime::bodyPart>
 findBody(HTMLMailMessage* msg, ref<vmime::bodyPart> message);
+static ref<vmime::bodyPart>
+pickAlternative(HTMLMailMessage* msg, ref<vmime::bodyPart> message);
+
+static ref<vmime::mediaType>
+contentType(ref<vmime::bodyPart> message)
+{
+    auto ctype = message->getHeader()->ContentType();
+    return ctype->getValue().dynamicCast<vmime::mediaType>();
+}
 
 static void print_msg(ref<vmime::bodyPart> msg, std::string pfx = "") {
     auto ctype = msg->getHeader()->ContentType();
@@ -59,6 +74,47 @@ HTMLMailMessage::getMessage() const
 }
 
 static ref<vmime::bodyPart>
+getSinglePart(HTMLMailMessage* msg, ref<vmime::bodyPart> message)
+{
+    auto ctype = message->getHeader()->ContentType();
+    auto mtype = ctype->getValue().dynamicCast<vmime::mediaType>();
+    std::string subtype = mtype->getSubType();
+    if (mtype->getType() != "multipart") {
+        qDebug("found single-part message");
+        return message;
+    } else if (subtype == "related") {
+        qDebug("extracting from multipart/related");
+        return getRelatedRoot(msg, message);
+    } else if (subtype == "mixed" || subtype == "signed") {
+        qDebug("extracting from multipart/%s", subtype.c_str());
+        return findBody(msg, message->getBody()->getPartAt(0));
+    } else if (subtype == "alternative") {
+        return pickAlternative(msg, message);
+    } else {
+        return NULL;
+    }
+}
+
+static ref<vmime::bodyPart>
+getPartById(HTMLMailMessage* msg, ref<vmime::bodyPart> message, std::string cid)
+{
+    auto hdr = message->getHeader()->ContentId()->getValue();
+    auto mid = hdr.dynamicCast<vmime::messageId>();
+
+    if (mid && mid->getId() == cid) {
+        return message;
+    }
+
+    for (auto part: message->getBody()->getPartList()) {
+        auto found = getPartById(msg, part, cid);
+        if (found) {
+            return found;
+        }
+    }
+    return NULL;
+}
+
+static ref<vmime::bodyPart>
 getRelatedRoot(HTMLMailMessage* msg, ref<vmime::bodyPart> message)
 {
     auto mrfld = message->getHeader()->ContentType().dynamicCast<vmime::parameterizedHeaderField>();
@@ -66,7 +122,7 @@ getRelatedRoot(HTMLMailMessage* msg, ref<vmime::bodyPart> message)
         std::string start = mrfld->getParameter("start")->getValue().getBuffer();
         QString st = QString::fromStdString(start);
         qDebug() <<"starts with content-id" << st;
-        return findBody(msg, msg->getRelatedPart(st));
+        return findBody(msg, getPartById(msg, message, start));
     } else {
         qDebug() <<"starts with first element";
         return findBody(msg, message->getBody()->getPartAt(0));
@@ -76,49 +132,33 @@ getRelatedRoot(HTMLMailMessage* msg, ref<vmime::bodyPart> message)
 static ref<vmime::bodyPart>
 findBody(HTMLMailMessage* msg, ref<vmime::bodyPart> message)
 {
-    auto ctype = message->getHeader()->ContentType();
-    auto mtype = ctype->getValue().dynamicCast<vmime::mediaType>();
-    if (mtype->getType() == "multipart") {
-        std::string subtype = mtype->getSubType();
-        if (subtype == "related") {
-            qDebug("extracting from multipart/related");
-            return getRelatedRoot(msg, message);
-        } else if (subtype == "mixed" || subtype == "signed") {
-            qDebug("extracting from multipart/%s", subtype.c_str());
-            return findBody(msg, message->getBody()->getPartAt(0));
-        } else if (subtype == "alternative") {
-            qDebug("returning multipart/alternative");
-            return message;
-        } else {
-            return NULL;
-        }
-    } else {
-        qDebug("not multipart, returning");
-        return message;
-    }
+    return getSinglePart(msg, message);
 }
 
 static ref<vmime::bodyPart>
-findHtml(ref<vmime::bodyPart> message) {
+pickAlternative(HTMLMailMessage* msg, ref<vmime::bodyPart> message) {
     auto mctype = message->getHeader()->ContentType();
     auto mmtype = mctype->getValue().dynamicCast<vmime::mediaType>();
-    if (mmtype->getType() != "multipart") {
+    if (mmtype->getType() != "multipart" || mmtype->getSubType() != "alternative") {
         return message;
     }
+
     ref<vmime::bodyPart> plain;
     qDebug() <<"scanning" <<message->getBody()->getPartList().size() <<"parts";
-    for (auto part: message->getBody()->getPartList()) {
-        auto ctype = part->getHeader()->ContentType();
-        auto mtype = ctype->getValue().dynamicCast<vmime::mediaType>();
-        if (mtype->getType() != "text") {
-            continue;
+    for (ref<vmime::bodyPart> part: message->getBody()->getPartList()) {
+        auto mtype = contentType(message);
+        if (mtype->getType() == "multipart") {
+            part = getSinglePart(msg, part);
+            mtype = contentType(part);
         }
-        if (mtype->getSubType() == "html") {
-            qDebug() <<"found text/html part";
-            return part;
-        } else if (mtype->getSubType() == "plain") {
-            qDebug() <<"found text/plain part";
-            plain = part;
+        if (mtype->getType() == "text") {
+            if (mtype->getSubType() == "html") {
+                qDebug() <<"found text/html part";
+                return part;
+            } else if (mtype->getSubType() == "plain") {
+                qDebug() <<"found text/plain part";
+                plain = part;
+            }
         }
     }
     return plain;
@@ -127,12 +167,12 @@ findHtml(ref<vmime::bodyPart> message) {
 ref<vmime::bodyPart>
 HTMLMailMessage::getBody()
 {
-    auto body = findBody(this, message);
-    return findHtml(body);
+    return findBody(this, message);
 }
 
 ref<vmime::bodyPart>
 HTMLMailMessage::getRelatedPart(QString cid)
 {
-    return NULL;
+    qDebug() <<"retrieving part" <<cid;
+    return getPartById(this, message, cid.toStdString());
 }
