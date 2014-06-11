@@ -19,23 +19,18 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 
-    for (int i = 1; i < argc; i++) {
-        HTMLMailMessage* msg = new HTMLMailMessage();
-        msg->load(argv[i]);
-        auto root = msg->getBody();
-        std::cout <<argv[i] <<": ";
-        if (root) {
-            std::cout <<root->getHeader()->ContentType()->getValue()->generate() <<std::endl;
-        } else {
-            std::cout <<"cannot find root (ctype: "
-                        <<msg->getMessage()->getHeader()->ContentType()->getValue()->generate()
-                          <<")\n";
-        }
-        delete msg;
+    if (argc == 1) {
+        std::cerr <<"No message specified\n";
+        return 2;
     }
+
 
     MailView w;
     w.show();
+
+    HTMLMailMessage* msg = new HTMLMailMessage(&w);
+    msg->load(argv[1]);
+    w.setMessage(msg);
 
     return a.exec();
 }

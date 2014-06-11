@@ -98,10 +98,34 @@ findBody(HTMLMailMessage* msg, ref<vmime::bodyPart> message)
     }
 }
 
+static ref<vmime::bodyPart>
+findHtml(ref<vmime::bodyPart> message) {
+    auto mctype = message->getHeader()->ContentType();
+    auto mmtype = mctype->getValue().dynamicCast<vmime::mediaType>();
+    if (mmtype->getType() != "multipart") {
+        return message;
+    }
+    ref<vmime::bodyPart> plain;
+    for (auto part: message->getBody()->getPartList()) {
+        auto ctype = part->getHeader()->ContentType();
+        auto mtype = ctype->getValue().dynamicCast<vmime::mediaType>();
+        if (mtype->getType() != "text") {
+            continue;
+        }
+        if (mtype->getSubType() == "html") {
+            return part;
+        } else if (mtype->getSubType() == "plain") {
+            plain = part;
+        }
+    }
+    return plain;
+}
+
 ref<vmime::bodyPart>
 HTMLMailMessage::getBody()
 {
-    return findBody(this, message);
+    auto body = findBody(this, message);
+    return findHtml(body);
 }
 
 ref<vmime::bodyPart>

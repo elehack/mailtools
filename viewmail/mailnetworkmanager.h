@@ -10,7 +10,7 @@ class MailNetworkManager : public QNetworkAccessManager
     Q_OBJECT
     Q_PROPERTY(bool remoteEnabled READ remoteEnabled WRITE remoteEnabled NOTIFY remoteEnabledChanged)
 public:
-    explicit MailNetworkManager(QObject *parent = 0);
+    explicit MailNetworkManager(QNetworkAccessManager* old, QObject *parent = 0);
 
     bool remoteEnabled() const;
     void remoteEnabled(bool enabled);
@@ -21,7 +21,7 @@ public:
 signals:
     void remoteEnabledChanged(bool value);
     void blockedRequest(const QNetworkRequest& req);
-    void messageLoaded(QPointer<HTMLMailMessage> msg);
+    void messageLoaded(HTMLMailMessage* msg);
 
 public slots:
 

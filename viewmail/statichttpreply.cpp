@@ -13,6 +13,12 @@ StaticHTTPReply::abort()
 }
 
 qint64
+StaticHTTPReply::bytesAvailable() const
+{
+    return bytes.size() - position;
+}
+
+qint64
 StaticHTTPReply::readData(char* data, qint64 maxSize)
 {
     if (position >= bytes.size()) {
@@ -29,6 +35,7 @@ void
 StaticHTTPReply::indicateReady()
 {
     emit metaDataChanged();
+    open(ReadOnly | Unbuffered);
     emit readyRead();
     emit finished();
 }
@@ -46,7 +53,7 @@ StaticHTTPReply::ok(const QNetworkRequest& req,
     reply->setHeader(QNetworkRequest::ContentLengthHeader, data.size());
     reply->setHeader(QNetworkRequest::ContentTypeHeader, contentType);
 
-    QTimer::singleShot(0, reply, SLOT(indicateReady()));
+    QTimer::singleShot(100, reply, SLOT(indicateReady()));
 
     return reply;
 }
@@ -67,7 +74,7 @@ StaticHTTPReply::notFound(const QNetworkRequest& req)
     reply->setHeader(QNetworkRequest::ContentLengthHeader, bytes.size());
     reply->setHeader(QNetworkRequest::ContentTypeHeader, "text/plain; charset=us-ascii");
 
-    QTimer::singleShot(0, reply, SLOT(indicateReady()));
+    QTimer::singleShot(100, reply, SLOT(indicateReady()));
 
     return reply;
 }
@@ -88,7 +95,7 @@ StaticHTTPReply::denied(QNetworkAccessManager::Operation op, const QNetworkReque
     reply->setHeader(QNetworkRequest::ContentLengthHeader, bytes.size());
     reply->setHeader(QNetworkRequest::ContentTypeHeader, "text/plain; charset=us-ascii");
 
-    QTimer::singleShot(0, reply, SLOT(indicateReady()));
+    QTimer::singleShot(100, reply, SLOT(indicateReady()));
 
     return reply;
 }

@@ -1,11 +1,16 @@
 #include "mailnetworkmanager.h"
 #include "statichttpreply.h"
 
-#include <QUrl>
+#include <QtNetwork>
+#include <QtDebug>
 
-MailNetworkManager::MailNetworkManager(QObject *parent) :
-    QNetworkAccessManager(parent)
+MailNetworkManager::MailNetworkManager(QNetworkAccessManager* old, QObject *parent) :
+    QNetworkAccessManager(parent), f_remoteEnabled(false)
 {
+    setCache(old->cache());
+    setCookieJar(old->cookieJar());
+    setProxy(old->proxy());
+    setProxyFactory(old->proxyFactory());
 }
 
 bool
@@ -39,8 +44,10 @@ MailNetworkManager::createRequest(Operation op, const QNetworkRequest& req, QIOD
 {
     QUrl url = req.url();
     QString scheme = url.scheme();
+    QNetworkReply* reply = NULL;
     if (scheme == "cid") {
         if (op == GetOperation) {
+            qDebug() <<"getting component for" <<url;
             vmime::ref<vmime::bodyPart> part;
             if (url.path() == "ROOT") {
                 part = theMessage->getBody();
@@ -48,18 +55,24 @@ MailNetworkManager::createRequest(Operation op, const QNetworkRequest& req, QIOD
                 part = theMessage->getRelatedPart(url.path());
             }
             if (part) {
-                return makeReply(req, part);
+                reply = makeReply(req, part);
             } else {
-                return StaticHTTPReply::notFound(req);
+                qDebug() <<url <<"not found";
+                reply = StaticHTTPReply::notFound(req);
             }
         } else {
-            return StaticHTTPReply::denied(op, req);
+            qDebug() <<"operation" <<op <<"not supported for CID URLs";
+            reply = StaticHTTPReply::denied(op, req);
         }
-    } else if (f_remoteEnabled) {
+    } else if (f_remoteEnabled && (url.scheme() == "http" | url.scheme() == "https")) {
+        qDebug() <<"delegating request for" <<url;
         return QNetworkAccessManager::createRequest(op, req, outgoingData);
     } else {
-        return StaticHTTPReply::denied(op, req);
+        qDebug() <<"denying remote request for" <<url;
+        reply = StaticHTTPReply::denied(op, req);
     }
+    emit finished(reply);
+    return reply;
 }
 
 QNetworkReply*
@@ -74,6 +87,7 @@ MailNetworkManager::makeReply(const QNetworkRequest& req, vmime::ref<vmime::body
         vmime::utility::outputStreamStringAdapter os(data);
         content->getBody()->getContents()->extract(os);
     }
+    qDebug() <<"making reply of length" <<data.size() <<"and type" <<mediaType;
     QByteArray buffer(data.c_str(), data.size());
     return StaticHTTPReply::ok(req, buffer, mediaType);
 }

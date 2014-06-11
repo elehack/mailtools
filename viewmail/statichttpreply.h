@@ -12,6 +12,7 @@ public:
     explicit StaticHTTPReply(QObject *parent = 0);
 
     void abort();
+    qint64 bytesAvailable() const;
 
     static StaticHTTPReply* ok(const QNetworkRequest& req,
                                const QByteArray& data, QString contentType);
