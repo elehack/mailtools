@@ -106,6 +106,7 @@ findHtml(ref<vmime::bodyPart> message) {
         return message;
     }
     ref<vmime::bodyPart> plain;
+    qDebug() <<"scanning" <<message->getBody()->getPartList().size() <<"parts";
     for (auto part: message->getBody()->getPartList()) {
         auto ctype = part->getHeader()->ContentType();
         auto mtype = ctype->getValue().dynamicCast<vmime::mediaType>();
@@ -113,8 +114,10 @@ findHtml(ref<vmime::bodyPart> message) {
             continue;
         }
         if (mtype->getSubType() == "html") {
+            qDebug() <<"found text/html part";
             return part;
         } else if (mtype->getSubType() == "plain") {
+            qDebug() <<"found text/plain part";
             plain = part;
         }
     }
