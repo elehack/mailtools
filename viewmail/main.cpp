@@ -10,6 +10,7 @@
 
 #include <QtNetwork>
 #include <QtCore>
+#include <QtWebKit>
 
 using vmime::utility::ref;
 
@@ -23,6 +24,8 @@ int main(int argc, char *argv[])
         std::cerr <<"No message specified\n";
         return 2;
     }
+
+    QWebSecurityOrigin::addLocalScheme("cid");
 
 
     MailView w;

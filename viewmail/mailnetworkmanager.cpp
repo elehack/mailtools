@@ -71,8 +71,16 @@ MailNetworkManager::createRequest(Operation op, const QNetworkRequest& req, QIOD
         qDebug() <<"denying remote request for" <<url;
         reply = StaticHTTPReply::denied(op, req);
     }
-    emit finished(reply);
+    connect(reply, SIGNAL(finished()), SLOT(replyFinished()));
     return reply;
+}
+
+void
+MailNetworkManager::replyFinished()
+{
+    QNetworkReply* reply = dynamic_cast<QNetworkReply*>(sender());
+    qDebug() <<"reply" <<reply <<"finished";
+    emit finished(reply);
 }
 
 QNetworkReply*

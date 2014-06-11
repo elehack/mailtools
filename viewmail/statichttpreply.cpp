@@ -56,7 +56,7 @@ StaticHTTPReply::ok(const QNetworkRequest& req,
 
     reply->setBuffer(data);
     reply->setHeader(QNetworkRequest::ContentLengthHeader, data.size());
-    reply->setHeader(QNetworkRequest::ContentTypeHeader, contentType);
+    reply->setHeader(QNetworkRequest::ContentTypeHeader, QVariant(contentType));
 
     QTimer::singleShot(0, reply, SLOT(indicateReady()));
 

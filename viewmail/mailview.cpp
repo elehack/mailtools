@@ -19,6 +19,10 @@ MailView::MailView(QWidget *parent)
     internal->view = view;
     setCentralWidget(view);
     internal->page = view->page();
+    internal->page->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
+    internal->page->settings()->setAttribute(QWebSettings::JavascriptEnabled, false);
+    internal->page->settings()->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls, true);
+    internal->page->settings()->setAttribute(QWebSettings::LocalContentCanAccessFileUrls, true);
 
     connect(view, SIGNAL(linkClicked(QUrl)), SLOT(browseUrl(QUrl)));
     internal->page->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
