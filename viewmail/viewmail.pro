@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core gui widgets network webkit
+QT       += core gui network webkit
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
 CONFIG += link_pkgconfig
 

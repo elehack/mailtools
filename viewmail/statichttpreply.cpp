@@ -28,6 +28,9 @@ StaticHTTPReply::bytesAvailable() const
 qint64
 StaticHTTPReply::readData(char* data, qint64 maxSize)
 {
+    if (offset >= bytes.length()) {
+        return -1;
+    }
     qDebug() <<"reading" <<maxSize <<"bytes of" <<(bytes.size() - offset) <<"available";
 
     qint64 sz = std::min(bytes.length() - offset, maxSize);
@@ -67,7 +70,7 @@ StaticHTTPReply*
 StaticHTTPReply::notFound(const QNetworkRequest& req)
 {
     QString message = "Object not found";
-    QByteArray bytes = message.toAscii();
+    QByteArray bytes = message.toUtf8();
 
     StaticHTTPReply* reply = new StaticHTTPReply();
     reply->setRequest(req);
@@ -89,7 +92,7 @@ StaticHTTPReply*
 StaticHTTPReply::denied(QNetworkAccessManager::Operation op, const QNetworkRequest& req)
 {
     QString message = "Access denied";
-    QByteArray bytes = message.toAscii();
+    QByteArray bytes = message.toUtf8();
 
     StaticHTTPReply* reply = new StaticHTTPReply();
     reply->setRequest(req);

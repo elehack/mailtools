@@ -3,7 +3,9 @@
 #include "htmlmail.h"
 
 #include <QtGui>
+#include <QStatusBar>
 #include <QtWebKit>
+#include <QtWebKitWidgets>
 
 struct MailViewInternal
 {
@@ -21,8 +23,6 @@ MailView::MailView(QWidget *parent)
     internal->page = view->page();
     internal->page->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
     internal->page->settings()->setAttribute(QWebSettings::JavascriptEnabled, false);
-    internal->page->settings()->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls, true);
-    internal->page->settings()->setAttribute(QWebSettings::LocalContentCanAccessFileUrls, true);
 
     connect(view, SIGNAL(linkClicked(QUrl)), SLOT(browseUrl(QUrl)));
     internal->page->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);

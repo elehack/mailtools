@@ -64,7 +64,7 @@ MailNetworkManager::createRequest(Operation op, const QNetworkRequest& req, QIOD
             qDebug() <<"operation" <<op <<"not supported for CID URLs";
             reply = StaticHTTPReply::denied(op, req);
         }
-    } else if (f_remoteEnabled && (url.scheme() == "http" | url.scheme() == "https")) {
+    } else if (f_remoteEnabled && (url.scheme() == "http" || url.scheme() == "https")) {
         qDebug() <<"delegating request for" <<url;
         return QNetworkAccessManager::createRequest(op, req, outgoingData);
     } else {
