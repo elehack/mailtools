@@ -1,9 +1,10 @@
 #include "statichttpreply.h"
 
 #include <QtCore>
+#include <QtDebug>
 
 StaticHTTPReply::StaticHTTPReply(QObject *parent) :
-    QNetworkReply(parent), position(0)
+    QNetworkReply(parent), offset(0)
 {
 }
 
@@ -12,22 +13,26 @@ StaticHTTPReply::abort()
 {
 }
 
+bool
+StaticHTTPReply::isSequential() const
+{
+    return true;
+}
+
 qint64
 StaticHTTPReply::bytesAvailable() const
 {
-    return bytes.size() - position;
+    return bytes.size() - offset + QIODevice::bytesAvailable();
 }
 
 qint64
 StaticHTTPReply::readData(char* data, qint64 maxSize)
 {
-    if (position >= bytes.size()) {
-        return -1;
-    }
+    qDebug() <<"reading" <<maxSize <<"bytes of" <<(bytes.size() - offset) <<"available";
 
-    qint64 sz = std::min(bytes.length() - position, maxSize);
-    qstrncpy(data, bytes.constData() + position, sz);
-    position += sz;
+    qint64 sz = std::min(bytes.length() - offset, maxSize);
+    qstrncpy(data, bytes.constData() + offset, sz);
+    offset += sz;
     return sz;
 }
 
@@ -53,7 +58,7 @@ StaticHTTPReply::ok(const QNetworkRequest& req,
     reply->setHeader(QNetworkRequest::ContentLengthHeader, data.size());
     reply->setHeader(QNetworkRequest::ContentTypeHeader, contentType);
 
-    QTimer::singleShot(100, reply, SLOT(indicateReady()));
+    QTimer::singleShot(0, reply, SLOT(indicateReady()));
 
     return reply;
 }
@@ -73,6 +78,7 @@ StaticHTTPReply::notFound(const QNetworkRequest& req)
     reply->setError(NetworkError::ContentNotFoundError, "Not Found");
     reply->setHeader(QNetworkRequest::ContentLengthHeader, bytes.size());
     reply->setHeader(QNetworkRequest::ContentTypeHeader, "text/plain; charset=us-ascii");
+    reply->setAttribute(QNetworkRequest::HttpStatusCodeAttribute, 200);
 
     QTimer::singleShot(100, reply, SLOT(indicateReady()));
 
@@ -104,5 +110,5 @@ void
 StaticHTTPReply::setBuffer(const QByteArray& buf)
 {
     bytes = buf;
-    position = 0;
+    offset = 0;
 }

@@ -89,5 +89,6 @@ MailNetworkManager::makeReply(const QNetworkRequest& req, vmime::ref<vmime::body
     }
     qDebug() <<"making reply of length" <<data.size() <<"and type" <<mediaType;
     QByteArray buffer(data.c_str(), data.size());
+
     return StaticHTTPReply::ok(req, buffer, mediaType);
 }
