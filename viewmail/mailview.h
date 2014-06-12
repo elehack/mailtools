@@ -6,6 +6,7 @@
 
 class MailViewInternal;
 class HTMLMailMessage;
+class QNetworkReply;
 
 class MailView : public QMainWindow
 {

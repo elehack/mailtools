@@ -29,6 +29,12 @@ public:
      */
     vmime::ref<vmime::bodyPart> getRelatedPart(QString cid);
 
+    /**
+     * @brief Get the content IDs in this message.
+     * @return The set of content IDs.
+     */
+    QSet<QString> getContentIds();
+
 signals:
 
 public slots:

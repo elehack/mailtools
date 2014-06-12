@@ -34,7 +34,7 @@ StaticHTTPReply::readData(char* data, qint64 maxSize)
     qDebug() <<"reading" <<maxSize <<"bytes of" <<(bytes.size() - offset) <<"available";
 
     qint64 sz = std::min(bytes.length() - offset, maxSize);
-    qstrncpy(data, bytes.constData() + offset, sz);
+    memcpy(data, bytes.constData() + offset, sz);
     offset += sz;
     return sz;
 }

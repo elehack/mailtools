@@ -176,3 +176,23 @@ HTMLMailMessage::getRelatedPart(QString cid)
     qDebug() <<"retrieving part" <<cid;
     return getPartById(this, message, cid.toStdString());
 }
+
+static void
+walkMessageForContentIds(ref<vmime::bodyPart> msg, QSet<QString>& idSet)
+{
+    auto hdr = msg->getHeader()->ContentId()->getValue().dynamicCast<vmime::messageId>();
+    if (hdr) {
+        idSet.insert(QString::fromStdString(hdr->getId()));
+    }
+    for (auto part: msg->getBody()->getPartList()) {
+        walkMessageForContentIds(part, idSet);
+    }
+}
+
+QSet<QString>
+HTMLMailMessage::getContentIds()
+{
+    QSet<QString> set;
+    walkMessageForContentIds(message, set);
+    return set;
+}

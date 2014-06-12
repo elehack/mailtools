@@ -19,6 +19,7 @@ int main(int argc, char *argv[])
     vmime::platform::setHandler<vmime::platforms::posix::posixHandler>();
 
     QApplication a(argc, argv);
+    qDebug() <<"application in" <<QCoreApplication::applicationDirPath();
 
     if (argc == 1) {
         std::cerr <<"No message specified\n";

@@ -5,7 +5,9 @@
 #include <QtGui>
 #include <QStatusBar>
 #include <QtWebKit>
+#if QT_VERSION >= 0x050000
 #include <QtWebKitWidgets>
+#endif
 
 struct MailViewInternal
 {
