@@ -19,18 +19,16 @@ int main(int argc, char *argv[])
     vmime::platform::setHandler<vmime::platforms::posix::posixHandler>();
 
     QApplication a(argc, argv);
-    qDebug() <<"application in" <<QCoreApplication::applicationDirPath();
-
-    if (argc == 1) {
-        std::cerr <<"No message specified\n";
-        return 2;
-    }
 
     MailView w;
     w.show();
 
     HTMLMailMessage* msg = new HTMLMailMessage(&w);
-    msg->load(argv[1]);
+    if (argc <= 1) {
+        msg->load(std::cin);
+    } else {
+        msg->load(argv[1]);
+    }
     w.setMessage(msg);
 
     return a.exec();

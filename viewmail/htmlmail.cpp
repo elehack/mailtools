@@ -47,18 +47,24 @@ HTMLMailMessage::HTMLMailMessage(QObject *parent) :
 }
 
 void
-HTMLMailMessage::load(QString fn)
+HTMLMailMessage::load(std::istream &str)
 {
-    fileName = fn;
-
-    std::ifstream input(fn.toStdString());
-    vmime::utility::inputStreamAdapter adap(input);
+    vmime::utility::inputStreamAdapter adap(str);
     vmime::string data;
     vmime::utility::outputStreamStringAdapter os(data);
     vmime::utility::bufferedStreamCopy(adap, os);
 
     message = vmime::create<vmime::message>();
     message->parse(data);
+}
+
+void
+HTMLMailMessage::load(QString fn)
+{
+    fileName = fn;
+
+    std::ifstream input(fn.toStdString());
+    load(input);
 }
 
 void

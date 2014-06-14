@@ -4,6 +4,8 @@
 #
 #-------------------------------------------------
 
+PREFIX = $$(HOME)/.local
+
 QT       += core gui network webkit
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets webkitwidgets
 
@@ -29,3 +31,6 @@ HEADERS  += mailview.h \
 
 PKGCONFIG += vmime
 QMAKE_CXXFLAGS += -std=gnu++11
+
+target.path = $$PREFIX/bin
+INSTALLS += target

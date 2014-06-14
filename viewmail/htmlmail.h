@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <vmime/vmime.hpp>
+#include <iostream>
 
 class HTMLMailMessage : public QObject
 {
@@ -10,6 +11,7 @@ class HTMLMailMessage : public QObject
 public:
     explicit HTMLMailMessage(QObject *parent = 0);
 
+    void load(std::istream& str);
     void load(QString fn);
 
     void dump();
