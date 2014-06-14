@@ -40,6 +40,14 @@ MailView::MailView(QWidget *parent)
     connect(internal->network, SIGNAL(remoteEnabledChanged(bool)),
             view, SLOT(reload()),
             Qt::QueuedConnection);
+
+    QAction* action = new QAction("&Quit", this);
+    QList<QKeySequence> shortcuts;
+    shortcuts.append(QKeySequence::Quit);
+    shortcuts.append(QKeySequence(Qt::Key_Q));
+    action->setShortcuts(shortcuts);
+    connect(action, SIGNAL(triggered()), SLOT(close()));
+    addAction(action);
 }
 
 MailView::~MailView()
