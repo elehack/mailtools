@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QUrl>
 
+#include <vmime/vmime.hpp>
+
 class MailViewInternal;
 class HTMLMailMessage;
 class QNetworkReply;
@@ -21,8 +23,10 @@ public:
 public slots:
     void browseToRoot();
 
-    void browseUrl(const QUrl& url);
-    void showUrl(const QString& link, const QString& title);
+    void browseUrl(QUrl url);
+    void showUrl(QString link, QString title);
+
+    void updateHeader(vmime::ref<vmime::message> message);
 
 private:
     MailViewInternal* const internal;

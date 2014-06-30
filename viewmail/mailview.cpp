@@ -1,6 +1,7 @@
 #include "mailview.h"
 #include "mailnetworkmanager.h"
 #include "htmlmail.h"
+#include <mustache.h>
 
 #include <QtGui>
 #include <QStatusBar>
@@ -9,19 +10,31 @@
 #include <QtWebKitWidgets>
 #endif
 
+static const vmime::charset VMIME_UTF8("UTF-8");
+
 struct MailViewInternal
 {
     QWebView *view;
     QWebPage *page;
+    QLabel* header;
     MailNetworkManager* network;
 };
 
 MailView::MailView(QWidget *parent)
     : QMainWindow(parent), internal(new MailViewInternal)
 {
+    QBoxLayout* box = new QVBoxLayout;
+    internal->header = new QLabel;
+    box->addWidget(internal->header);
+
     QWebView *view = new QWebView;
     internal->view = view;
-    setCentralWidget(view);
+    box->addWidget(view, 1);
+
+    QWidget* widget = new QWidget;
+    setCentralWidget(widget);
+    widget->setLayout(box);
+
     internal->page = view->page();
 #ifndef QT_NO_DEBUG
     internal->page->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
@@ -62,13 +75,13 @@ MailView::browseToRoot()
 }
 
 void
-MailView::browseUrl(const QUrl& url)
+MailView::browseUrl(QUrl url)
 {
     QDesktopServices::openUrl(url);
 }
 
 void
-MailView::showUrl(const QString& link, const QString& title)
+MailView::showUrl(QString link, QString title)
 {
     QStatusBar* sb = statusBar();
     if (link.isEmpty()) {
@@ -78,8 +91,81 @@ MailView::showUrl(const QString& link, const QString& title)
     }
 }
 
+static QString
+decodeText(const vmime::text& text) {
+    std::string decoded = text.getConvertedText(VMIME_UTF8);
+    return QString::fromUtf8(decoded.c_str());
+}
+
+static QString
+decodeText(const vmime::ref<vmime::text>& text) {
+    return decodeText(*text);
+}
+
+static QString
+formatMailAddress(vmime::ref<vmime::mailbox> addr)
+{
+    QString name = decodeText(addr->getName());
+    std::string rawAddress = addr->getEmail(); // FIXME bad encoding
+    QString address = QString::fromUtf8(rawAddress.c_str());
+
+    if (name.isEmpty()) {
+        return address;
+    } else {
+        return name + " <" + address + ">";
+    }
+}
+
+static QVariantHash
+makeHeaderContext(vmime::ref<vmime::message> msg)
+{
+    QVariantHash hash;
+    auto header = msg->getHeader();
+    auto from = header->From()->getValue().dynamicCast<vmime::mailbox>();
+    hash["subject"] = decodeText(header->Subject()->getValue().dynamicCast<vmime::text>());
+    hash["from"] = formatMailAddress(from);
+
+    QString recipients;
+    auto recips = header->To()->getValue().dynamicCast<vmime::addressList>();
+    for (auto recip: recips->getAddressList()) {
+        if (!recipients.isEmpty()) {
+            recipients += ", ";
+        }
+        recipients += formatMailAddress(recip.dynamicCast<vmime::mailbox>());
+    }
+    hash["to"] = recipients;
+
+    qDebug() <<"Mail from" <<hash["from"];
+
+    return hash;
+}
+
+void
+MailView::updateHeader(vmime::ref<vmime::message> message)
+{
+    QResource templateResource(":/viewmail/header-template.txt");
+    if (!templateResource.isValid()) {
+        qWarning("template is not valid");
+    }
+    QString tmpl = QString::fromUtf8((const char*) templateResource.data());
+    qDebug() <<"Header template:" <<tmpl;
+
+    Mustache::Renderer renderer;
+    Mustache::QtVariantContext context(makeHeaderContext(message));
+
+    QString headerText;
+    {
+        QTextStream output(&headerText);
+        output << renderer.render(tmpl, &context);
+    }
+    qDebug() <<"Header text:" <<headerText;
+
+    internal->header->setText(headerText);
+}
+
 void
 MailView::setMessage(HTMLMailMessage *msg)
 {
     internal->network->activeMessage(msg);
+    updateHeader(msg->getMessage());
 }

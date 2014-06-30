@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/viewmail">
+        <file>header-template.txt</file>
+    </qresource>
+</RCC>
