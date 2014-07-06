@@ -1,3 +1,0 @@
-[submodule "mustache"]
-	path = qt-mustache
-	url = https://github.com/robertknight/qt-mustache.git
