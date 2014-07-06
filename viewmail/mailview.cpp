@@ -102,63 +102,64 @@ decodeText(const vmime::ref<vmime::text>& text) {
     return decodeText(*text);
 }
 
-static QString
-formatMailAddress(vmime::ref<vmime::mailbox> addr)
+static void
+renderMailAddress(vmime::ref<vmime::mailbox> addr, QTextStream& output)
 {
     QString name = decodeText(addr->getName());
     std::string rawAddress = addr->getEmail(); // FIXME bad encoding
     QString address = QString::fromUtf8(rawAddress.c_str());
 
     if (name.isEmpty()) {
-        return address;
+        output << address;
     } else {
-        return name + " <" + address + ">";
+        output << name << "< " << address <<">";
     }
 }
 
-static QVariantHash
-makeHeaderContext(vmime::ref<vmime::message> msg)
+static void
+renderAddressList(std::vector<vmime::ref<vmime::address>> addresses, QTextStream& output)
 {
-    QVariantHash hash;
-    auto header = msg->getHeader();
-    auto from = header->From()->getValue().dynamicCast<vmime::mailbox>();
-    hash["subject"] = decodeText(header->Subject()->getValue().dynamicCast<vmime::text>());
-    hash["from"] = formatMailAddress(from);
-
-    QString recipients;
-    auto recips = header->To()->getValue().dynamicCast<vmime::addressList>();
-    for (auto recip: recips->getAddressList()) {
-        if (!recipients.isEmpty()) {
-            recipients += ", ";
+    bool first = true;
+    for (auto recip: addresses) {
+        if (first) {
+            first = false;
+        } else {
+            output << ", ";
         }
-        recipients += formatMailAddress(recip.dynamicCast<vmime::mailbox>());
+        renderMailAddress(recip.dynamicCast<vmime::mailbox>(), output);
     }
-    hash["to"] = recipients;
+}
 
-    qDebug() <<"Mail from" <<hash["from"];
+static QString
+renderHeader(vmime::ref<vmime::message> msg)
+{
+    QString result;
+    QTextStream output(&result);
 
-    return hash;
+    auto header = msg->getHeader();
+
+    output <<"<b>Subject:</b> "
+          << decodeText(header->Subject()->getValue().dynamicCast<vmime::text>())
+          <<"<br>\n";
+
+    auto from = header->From()->getValue().dynamicCast<vmime::mailbox>();
+    output <<"<b>From:</b> ";
+    renderMailAddress(from, output);
+    output <<"<br>\n";
+
+    auto recips = header->To()->getValue().dynamicCast<vmime::addressList>();
+    output <<"<b>To:</b> ";
+    renderAddressList(recips->getAddressList(), output);
+
+    output.flush();
+
+    return result;
 }
 
 void
 MailView::updateHeader(vmime::ref<vmime::message> message)
 {
-    QResource templateResource(":/viewmail/header-template.txt");
-    if (!templateResource.isValid()) {
-        qWarning("template is not valid");
-    }
-    QString tmpl = QString::fromUtf8((const char*) templateResource.data());
-    qDebug() <<"Header template:" <<tmpl;
-
-    Mustache::Renderer renderer;
-    Mustache::QtVariantContext context(makeHeaderContext(message));
-
-    QString headerText;
-    {
-        QTextStream output(&headerText);
-        output << renderer.render(tmpl, &context);
-    }
-    qDebug() <<"Header text:" <<headerText;
+    QString headerText = renderHeader(message);
 
     internal->header->setText(headerText);
 }

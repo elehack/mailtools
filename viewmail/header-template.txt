@@ -1,6 +1,0 @@
-<b>Subect:</b> {{subject}}<br>
-<b>From:</b> {{from}}<br>
-<b>To:</b> {{to}}<br>
-{{#cc}}
-<b>Cc:</b> {{cc}}<br>
-{{/cc}}
