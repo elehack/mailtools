@@ -1,7 +1,6 @@
 #include "mailview.h"
 #include "mailnetworkmanager.h"
 #include "htmlmail.h"
-#include <mustache.h>
 
 #include <QtGui>
 #include <QStatusBar>
