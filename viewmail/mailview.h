@@ -22,6 +22,7 @@ public:
 
 public slots:
     void browseToRoot();
+    void showPrintDialog();
 
     void browseUrl(QUrl url);
     void showUrl(QString link, QString title);

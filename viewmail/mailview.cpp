@@ -60,6 +60,14 @@ MailView::MailView(QWidget *parent)
     action->setShortcuts(shortcuts);
     connect(action, SIGNAL(triggered()), SLOT(close()));
     addAction(action);
+
+    action = new QAction("&Print", this);
+    shortcuts.clear();
+    shortcuts.append(QKeySequence::Print);
+    shortcuts.append(QKeySequence(Qt::Key_P));
+    action->setShortcuts(shortcuts);
+    connect(action, SIGNAL(triggered()), SLOT(showPrintDialog()));
+    addAction(action);
 }
 
 MailView::~MailView()
@@ -168,4 +176,13 @@ MailView::setMessage(HTMLMailMessage *msg)
 {
     internal->network->activeMessage(msg);
     updateHeader(msg->getMessage());
+}
+
+void
+MailView::showPrintDialog()
+{
+    QPrintDialog* dlg = new QPrintDialog(this);
+    connect(dlg, SIGNAL(accepted(QPrinter*)),
+            internal->view, SLOT(print(QPrinter*)));
+    dlg->show();
 }
