@@ -32,6 +32,12 @@
         <property name="textFormat">
          <enum>Qt::PlainText</enum>
         </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+        </property>
        </widget>
       </item>
       <item row="2" column="0">
@@ -49,6 +55,9 @@
         <property name="textFormat">
          <enum>Qt::PlainText</enum>
         </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+        </property>
        </widget>
       </item>
       <item row="3" column="0">
@@ -62,6 +71,12 @@
        <widget class="QLabel" name="to">
         <property name="text">
          <string>me@example.com</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
         </property>
        </widget>
       </item>
@@ -77,6 +92,9 @@
         <property name="text">
          <string>July 4, 2014</string>
         </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+        </property>
        </widget>
       </item>
       <item row="4" column="0">
@@ -90,6 +108,12 @@
        <widget class="QLabel" name="cc">
         <property name="text">
          <string>TextLabel</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
         </property>
        </widget>
       </item>
