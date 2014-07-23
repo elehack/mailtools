@@ -70,6 +70,7 @@ MailNetworkManager::createRequest(Operation op, const QNetworkRequest& req, QIOD
     } else {
         qDebug() <<"denying remote request for" <<url;
         reply = StaticHTTPReply::denied(op, req);
+        emit blockedRequest(req);
     }
     connect(reply, SIGNAL(finished()), SLOT(replyFinished()));
     return reply;

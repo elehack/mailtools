@@ -9,6 +9,8 @@
 class MailViewInternal;
 class HTMLMailMessage;
 class QNetworkReply;
+class QNetworkRequest;
+
 namespace Ui {
     class MailViewWindow;
 }
@@ -31,6 +33,8 @@ public slots:
     void showUrl(QString link, QString title);
 
     void updateHeader(vmime::ref<vmime::message> message);
+
+    void handleBlockedImage(const QNetworkRequest& req);
 
 private:
     MailViewInternal* const internal;

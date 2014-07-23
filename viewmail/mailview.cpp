@@ -16,6 +16,7 @@ struct MailViewInternal
 {
     QWebPage* page;
     MailNetworkManager* network;
+    int blockCount;
 };
 
 MailView::MailView(QWidget *parent)
@@ -46,6 +47,9 @@ MailView::MailView(QWidget *parent)
     connect(ui->actionPrint, SIGNAL(triggered()), SLOT(showPrintDialog()));
     addAction(ui->actionQuit);
     addAction(ui->actionPrint);
+
+    connect(internal->network, SIGNAL(blockedRequest(const QNetworkRequest&)),
+            SLOT(handleBlockedImage(const QNetworkRequest&)));
 }
 
 MailView::~MailView()
@@ -152,6 +156,7 @@ void
 MailView::setMessage(HTMLMailMessage *msg)
 {
     ui->loadImages->setVisible(false);
+    internal->blockCount = 0;
     internal->network->activeMessage(msg);
     updateHeader(msg->getMessage());
 }
@@ -163,4 +168,13 @@ MailView::showPrintDialog()
     connect(dlg, SIGNAL(accepted(QPrinter*)),
             ui->bodyView, SLOT(print(QPrinter*)));
     dlg->show();
+}
+
+void
+MailView::handleBlockedImage(const QNetworkRequest &req)
+{
+    ui->loadImages->setVisible(true);
+    internal->blockCount += 1;
+    qDebug() <<"Blocked" <<internal->blockCount <<"images";
+    ui->loadImages->setText(QString("Load %1 blocked images").arg(internal->blockCount));
 }
