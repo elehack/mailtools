@@ -142,13 +142,14 @@ MailView::updateHeader(vmime::ref<vmime::message> message)
 
     ui->to->setText(renderAddressList(header->To()));
     auto cc = header->Cc();
-    if (cc->getValue()) {
+    auto ccList = cc->getValue().dynamicCast<vmime::addressList>();
+    if (ccList->isEmpty()) {
+        ui->cc->setVisible(false);
+        ui->ccLabel->setVisible(false);
+    } else {
         ui->cc->setVisible(true);
         ui->ccLabel->setVisible(true);
         ui->cc->setText(renderAddressList(cc));
-    } else {
-        ui->cc->setVisible(false);
-        ui->ccLabel->setVisible(false);
     }
 }
 
