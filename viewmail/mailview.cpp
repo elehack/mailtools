@@ -1,6 +1,7 @@
 #include "mailview.h"
 #include "mailnetworkmanager.h"
 #include "htmlmail.h"
+#include "ui_mailview.h"
 
 #include <QtGui>
 #include <QStatusBar>
@@ -13,34 +14,23 @@ static const vmime::charset VMIME_UTF8("UTF-8");
 
 struct MailViewInternal
 {
-    QWebView *view;
-    QWebPage *page;
-    QLabel* header;
+    QWebPage* page;
     MailNetworkManager* network;
 };
 
 MailView::MailView(QWidget *parent)
-    : QMainWindow(parent), internal(new MailViewInternal)
+    : QMainWindow(parent), internal(new MailViewInternal), ui(new Ui::MailViewWindow)
 {
-    QBoxLayout* box = new QVBoxLayout;
-    internal->header = new QLabel;
-    box->addWidget(internal->header);
+    ui->setupUi(this);
 
-    QWebView *view = new QWebView;
-    internal->view = view;
-    box->addWidget(view, 1);
-
-    QWidget* widget = new QWidget;
-    setCentralWidget(widget);
-    widget->setLayout(box);
-
-    internal->page = view->page();
+    internal->page = ui->bodyView->page();
 #ifndef QT_NO_DEBUG
     internal->page->settings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 #endif
     internal->page->settings()->setAttribute(QWebSettings::JavascriptEnabled, false);
 
-    connect(view, SIGNAL(linkClicked(QUrl)), SLOT(browseUrl(QUrl)));
+    connect(ui->bodyView, SIGNAL(linkClicked(QUrl)),
+            SLOT(browseUrl(QUrl)));
     internal->page->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     connect(internal->page, SIGNAL(linkHovered(QString,QString,QString)),
             SLOT(showUrl(QString,QString)));
@@ -50,35 +40,22 @@ MailView::MailView(QWidget *parent)
     connect(internal->network, SIGNAL(messageLoaded(HTMLMailMessage*)),
             SLOT(browseToRoot()), Qt::QueuedConnection);
     connect(internal->network, SIGNAL(remoteEnabledChanged(bool)),
-            view, SLOT(reload()),
+            ui->bodyView, SLOT(reload()),
             Qt::QueuedConnection);
 
-    QAction* action = new QAction("&Quit", this);
-    QList<QKeySequence> shortcuts;
-    shortcuts.append(QKeySequence::Quit);
-    shortcuts.append(QKeySequence(Qt::Key_Q));
-    action->setShortcuts(shortcuts);
-    connect(action, SIGNAL(triggered()), SLOT(close()));
-    addAction(action);
-
-    action = new QAction("&Print", this);
-    shortcuts.clear();
-    shortcuts.append(QKeySequence::Print);
-    shortcuts.append(QKeySequence(Qt::Key_P));
-    action->setShortcuts(shortcuts);
-    connect(action, SIGNAL(triggered()), SLOT(showPrintDialog()));
-    addAction(action);
+    connect(ui->actionPrint, SIGNAL(triggered()), SLOT(showPrintDialog()));
 }
 
 MailView::~MailView()
 {
     delete internal;
+    delete ui;
 }
 
 void
 MailView::browseToRoot()
 {
-    internal->view->load(QUrl("cid:ROOT"));
+    ui->bodyView->load(QUrl("cid:ROOT"));
 }
 
 void
@@ -90,7 +67,7 @@ MailView::browseUrl(QUrl url)
 void
 MailView::showUrl(QString link, QString title)
 {
-    QStatusBar* sb = statusBar();
+    QStatusBar* sb = ui->statusbar;
     if (link.isEmpty()) {
         sb->clearMessage();
     } else {
@@ -109,71 +86,70 @@ decodeText(const vmime::ref<vmime::text>& text) {
     return decodeText(*text);
 }
 
-static void
-renderMailAddress(vmime::ref<vmime::mailbox> addr, QTextStream& output)
+static QString
+decodeText(const vmime::ref<vmime::headerField>& text) {
+    return decodeText(*(text->getValue().dynamicCast<const vmime::text>()));
+}
+
+static QString
+renderMailAddress(vmime::ref<vmime::mailbox> addr)
 {
     QString name = decodeText(addr->getName());
     std::string rawAddress = addr->getEmail(); // FIXME bad encoding
     QString address = QString::fromUtf8(rawAddress.c_str());
 
     if (name.isEmpty()) {
-        output << address;
+        return address;
     } else {
-        output << name << "< " << address <<">";
-    }
-}
-
-static void
-renderAddressList(std::vector<vmime::ref<vmime::address>> addresses, QTextStream& output)
-{
-    bool first = true;
-    for (auto recip: addresses) {
-        if (first) {
-            first = false;
-        } else {
-            output << ", ";
-        }
-        renderMailAddress(recip.dynamicCast<vmime::mailbox>(), output);
+        return name + " <" + address + ">";
     }
 }
 
 static QString
-renderHeader(vmime::ref<vmime::message> msg)
+renderMailAddress(vmime::ref<vmime::headerField> header)
 {
-    QString result;
-    QTextStream output(&result);
+    return renderMailAddress(header->getValue().dynamicCast<vmime::mailbox>());
+}
 
-    auto header = msg->getHeader();
+static QString
+renderAddressList(std::vector<vmime::ref<vmime::address>> addresses)
+{
+    QStringList strings;
+    for (auto addr: addresses) {
+        strings << renderMailAddress(addr.dynamicCast<vmime::mailbox>());
+    }
+    return strings.join(", ");
+}
 
-    output <<"<b>Subject:</b> "
-          << decodeText(header->Subject()->getValue().dynamicCast<vmime::text>())
-          <<"<br>\n";
-
-    auto from = header->From()->getValue().dynamicCast<vmime::mailbox>();
-    output <<"<b>From:</b> ";
-    renderMailAddress(from, output);
-    output <<"<br>\n";
-
-    auto recips = header->To()->getValue().dynamicCast<vmime::addressList>();
-    output <<"<b>To:</b> ";
-    renderAddressList(recips->getAddressList(), output);
-
-    output.flush();
-
-    return result;
+static QString
+renderAddressList(vmime::ref<vmime::headerField> addresses)
+{
+    return renderAddressList(addresses->getValue().dynamicCast<vmime::addressList>()->getAddressList());
 }
 
 void
 MailView::updateHeader(vmime::ref<vmime::message> message)
 {
-    QString headerText = renderHeader(message);
+    auto header = message->getHeader();
+    ui->subject->setText(decodeText(header->Subject()));
+    ui->from->setText(renderMailAddress(header->From()));
 
-    internal->header->setText(headerText);
+    ui->to->setText(renderAddressList(header->To()));
+    auto cc = header->Cc();
+    if (cc) {
+        ui->cc->setVisible(true);
+        ui->ccLabel->setVisible(true);
+        ui->cc->setText(renderAddressList(cc));
+    } else {
+        ui->cc->setVisible(false);
+        ui->ccLabel->setVisible(false);
+    }
 }
 
 void
 MailView::setMessage(HTMLMailMessage *msg)
 {
+    ui->loadImages->setVisible(false);
     internal->network->activeMessage(msg);
     updateHeader(msg->getMessage());
 }
@@ -183,6 +159,6 @@ MailView::showPrintDialog()
 {
     QPrintDialog* dlg = new QPrintDialog(this);
     connect(dlg, SIGNAL(accepted(QPrinter*)),
-            internal->view, SLOT(print(QPrinter*)));
+            ui->bodyView, SLOT(print(QPrinter*)));
     dlg->show();
 }

@@ -9,6 +9,9 @@
 class MailViewInternal;
 class HTMLMailMessage;
 class QNetworkReply;
+namespace Ui {
+    class MailViewWindow;
+}
 
 class MailView : public QMainWindow
 {
@@ -31,6 +34,7 @@ public slots:
 
 private:
     MailViewInternal* const internal;
+    Ui::MailViewWindow* ui;
 };
 
 #endif // MAILVIEW_H
