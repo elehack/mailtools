@@ -44,6 +44,8 @@ MailView::MailView(QWidget *parent)
             Qt::QueuedConnection);
 
     connect(ui->actionPrint, SIGNAL(triggered()), SLOT(showPrintDialog()));
+    addAction(ui->actionQuit);
+    addAction(ui->actionPrint);
 }
 
 MailView::~MailView()
@@ -136,7 +138,7 @@ MailView::updateHeader(vmime::ref<vmime::message> message)
 
     ui->to->setText(renderAddressList(header->To()));
     auto cc = header->Cc();
-    if (cc) {
+    if (cc->getValue()) {
         ui->cc->setVisible(true);
         ui->ccLabel->setVisible(true);
         ui->cc->setText(renderAddressList(cc));
