@@ -50,6 +50,8 @@ MailView::MailView(QWidget *parent)
 
     connect(internal->network, SIGNAL(blockedRequest(const QNetworkRequest&)),
             SLOT(handleBlockedImage(const QNetworkRequest&)));
+    connect(ui->actionEnableRemoteImages, SIGNAL(triggered()),
+            internal->network, SLOT(enableRemoteRequests()));
 }
 
 MailView::~MailView()

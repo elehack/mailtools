@@ -24,6 +24,7 @@ signals:
     void messageLoaded(HTMLMailMessage* msg);
 
 public slots:
+    void enableRemoteRequests();
 
 protected slots:
     void replyFinished();

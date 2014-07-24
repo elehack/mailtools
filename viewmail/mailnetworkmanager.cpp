@@ -101,3 +101,9 @@ MailNetworkManager::makeReply(const QNetworkRequest& req, vmime::ref<vmime::body
 
     return StaticHTTPReply::ok(req, buffer, mediaType);
 }
+
+void
+MailNetworkManager::enableRemoteRequests()
+{
+    remoteEnabled(true);
+}

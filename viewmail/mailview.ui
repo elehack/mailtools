@@ -120,7 +120,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QCommandLinkButton" name="loadImages">
+     <widget class="QPushButton" name="loadImages">
       <property name="text">
        <string>Show remote images</string>
       </property>
@@ -154,6 +154,14 @@
     <string>P</string>
    </property>
   </action>
+  <action name="actionEnableRemoteImages">
+   <property name="text">
+    <string>Load Remote Images</string>
+   </property>
+   <property name="toolTip">
+    <string>Allow remote requests to be loaded</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -177,6 +185,22 @@
     <hint type="destinationlabel">
      <x>399</x>
      <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>loadImages</sender>
+   <signal>clicked()</signal>
+   <receiver>actionEnableRemoteImages</receiver>
+   <slot>trigger()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>399</x>
+     <y>161</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
     </hint>
    </hints>
   </connection>
