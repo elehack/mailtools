@@ -63,6 +63,8 @@ MailView::~MailView()
 void
 MailView::browseToRoot()
 {
+    ui->loadImages->setVisible(false);
+    internal->blockCount = 0;
     ui->bodyView->load(QUrl("cid:ROOT"));
 }
 
@@ -158,8 +160,6 @@ MailView::updateHeader(vmime::ref<vmime::message> message)
 void
 MailView::setMessage(HTMLMailMessage *msg)
 {
-    ui->loadImages->setVisible(false);
-    internal->blockCount = 0;
     internal->network->activeMessage(msg);
     updateHeader(msg->getMessage());
 }
