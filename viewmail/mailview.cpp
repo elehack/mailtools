@@ -38,6 +38,8 @@ MailView::MailView(QWidget *parent)
 
     internal->network = new MailNetworkManager(internal->page->networkAccessManager(), this);
     internal->page->setNetworkAccessManager(internal->network);
+    connect(ui->bodyView, SIGNAL(loadStarted()),
+            SLOT(bodyLoadStarted()));
     connect(internal->network, SIGNAL(messageLoaded(HTMLMailMessage*)),
             SLOT(browseToRoot()), Qt::QueuedConnection);
     connect(internal->network, SIGNAL(remoteEnabledChanged(bool)),
@@ -155,6 +157,13 @@ MailView::updateHeader(vmime::ref<vmime::message> message)
         ui->ccLabel->setVisible(true);
         ui->cc->setText(renderAddressList(cc));
     }
+}
+
+void
+MailView::bodyLoadStarted()
+{
+    ui->loadImages->setVisible(false);
+    internal->blockCount = 0;
 }
 
 void

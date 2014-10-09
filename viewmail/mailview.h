@@ -36,6 +36,8 @@ public slots:
 
     void handleBlockedImage(const QNetworkRequest& req);
 
+    void bodyLoadStarted();
+
 private:
     MailViewInternal* const internal;
     Ui::MailViewWindow* ui;
