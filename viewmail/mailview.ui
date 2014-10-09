@@ -128,6 +128,12 @@
     </item>
     <item>
      <widget class="QWebView" name="bodyView">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>1</verstretch>
+       </sizepolicy>
+      </property>
       <property name="url">
        <url>
         <string>about:blank</string>
