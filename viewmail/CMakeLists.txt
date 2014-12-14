@@ -2,6 +2,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories (BEFORE ${MUSTACHE_SOURCE_DIR})
+include_directories (BEFORE ${EXTRA_INCLUDE_DIRS})
 
 set(src main.cpp mailview.cpp htmlmail.cpp mailnetworkmanager.cpp statichttpreply.cpp)
 QT4_WRAP_UI(src mailview.ui)
