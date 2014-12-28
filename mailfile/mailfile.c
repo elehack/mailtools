@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
     notmuch_database_t *nm_db = NULL;
     notmuch_status_t nm_stat;
     int i;
+    int status = 0;
 
     nm_stat = notmuch_database_open("/home/michael/Mail", 0, &nm_db);
     if (nm_stat != NOTMUCH_STATUS_SUCCESS) {
@@ -131,11 +132,12 @@ int main(int argc, char *argv[])
             Tcl_DecrRefCount(key);
             fprintf(stderr, "error: %s\n", Tcl_GetString(info));
             Tcl_DecrRefCount(opts);
-            Tcl_DeleteInterp(interp);
-            return 1;
+            status = 1;
+            goto done;
         }
     }
 
+done:
     Tcl_DeleteInterp(interp);
-    return 0;
+    return status;
 }
