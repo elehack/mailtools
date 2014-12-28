@@ -4,7 +4,16 @@
 #include <tcl.h>
 #include <notmuch.h>
 
-Tcl_Interp* create_script_interpreter(notmuch_database_t *db);
+typedef struct filter_context {
+    notmuch_database_t *database;
+} filter_context_t;
+
+#define FILTER_CONTEXT(x) ((struct filter_context*)(x))
+
+filter_context_t* create_filter_context();
+void destroy_context(filter_context_t *ctx);
+
+Tcl_Interp* create_script_interpreter(filter_context_t *context);
 void print_script_error(Tcl_Interp* interp, int code);
 
 #endif

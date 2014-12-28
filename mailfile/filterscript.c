@@ -5,19 +5,51 @@
 #include "filterscript.h"
 
 static int
+cmd_database(ClientData data, Tcl_Interp *interp,
+        int argc, const char *argv[])
+{
+    struct filter_context *ctx = FILTER_CONTEXT(data);
+    notmuch_status_t status;
+
+    if (argc != 2) {
+        Tcl_SetResult(interp, "wrong # of arguments: expected database path",
+                NULL);
+        return TCL_ERROR;
+    }
+
+    if (ctx->database) {
+        notmuch_database_destroy(ctx->database);
+    }
+    
+    status = notmuch_database_open(argv[1], 0, &(ctx->database));
+    if (status != NOTMUCH_STATUS_SUCCESS) {
+        Tcl_SetResult(interp, "cannot open database", NULL);
+        return TCL_ERROR;
+    }
+
+    return TCL_OK;
+}
+
+static int
 cmd_matching(ClientData data, Tcl_Interp *interp,
         int argc, const char *argv[])
 {
     char *qstr, *script;
     Tcl_Command *cmd;
-    notmuch_database_t *nm_db = (notmuch_database_t*) data;
+    struct filter_context *ctx = FILTER_CONTEXT(data);
+    notmuch_database_t *nm_db = ctx->database;
     notmuch_query_t *query;
     notmuch_messages_t *results;
     notmuch_message_t *message;
     int result = TCL_ERROR;
 
+    if (!nm_db) {
+        Tcl_SetResult(interp, "no database open", NULL);
+        return TCL_ERROR;
+    }
+
     if (argc != 3) {
-        fprintf(stderr, "matching: invalid arguments\n");
+        Tcl_SetResult(interp, "matching: invalid arguments", NULL);
         return TCL_ERROR;
     }
 
@@ -25,13 +57,13 @@ cmd_matching(ClientData data, Tcl_Interp *interp,
     script = argv[2];
     query = notmuch_query_create(nm_db, qstr);
     if (query == NULL) {
-        fprintf(stderr, "matching: could not create query\n");
+        Tcl_SetResult(interp, "matching: could not create query", NULL);
         goto done;
     }
 
     results = notmuch_query_search_messages(query);
     if (results == NULL) {
-        fprintf(stderr, "matching: could not get results\n");
+        Tcl_SetResult(interp, "matching: could not get results", NULL);
         goto done;
     }
 
@@ -61,10 +93,29 @@ done:
     return result;
 }
 
-Tcl_Interp* create_script_interpreter(notmuch_database_t *db)
+void destroy_context(struct filter_context* ctx)
+{
+    if (ctx->database) {
+        notmuch_database_destroy(ctx->database);
+    }
+    free(ctx);
+}
+
+filter_context_t* create_filter_context()
+{
+    struct filter_context *context = malloc(sizeof(struct filter_context));
+    if (!context) {
+        abort();
+    }
+    context->database = NULL;
+    return context;
+}
+
+Tcl_Interp* create_script_interpreter(filter_context_t *context)
 {
     Tcl_Interp *interp = Tcl_CreateInterp();
-    Tcl_CreateCommand(interp, "matching", cmd_matching, db, notmuch_database_close);
+    Tcl_CreateCommand(interp, "database", cmd_database, context, NULL);
+    Tcl_CreateCommand(interp, "matching", cmd_matching, context, NULL);
     return interp;
 }
 
