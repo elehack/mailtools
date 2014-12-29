@@ -21,7 +21,8 @@ cmd_database(ClientData data, Tcl_Interp *interp,
         notmuch_database_destroy(ctx->database);
     }
     
-    status = notmuch_database_open(argv[1], 0, &(ctx->database));
+    status = notmuch_database_open(argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE,
+            &(ctx->database));
     if (status != NOTMUCH_STATUS_SUCCESS) {
         Tcl_SetResult(interp, "cannot open database", NULL);
         return TCL_ERROR;
@@ -71,6 +72,7 @@ cmd_matching(ClientData data, Tcl_Interp *interp,
         message = notmuch_messages_get(results);
         printf("found message %s\n", notmuch_message_get_message_id(message));
         Tcl_CreateCommand(interp, "msg", cmd_msg, message, NULL);
+        Tcl_CreateCommand(interp, "tag", cmd_tag_message, message, NULL);
         result = Tcl_Eval(interp, script);
         if (result != TCL_OK) {
             Tcl_AddErrorInfo(interp, "\n    for message ");
@@ -78,6 +80,7 @@ cmd_matching(ClientData data, Tcl_Interp *interp,
             goto done;
         }
         Tcl_DeleteCommand(interp, "msg");
+        Tcl_DeleteCommand(interp, "tag");
         notmuch_messages_move_to_next(results);
     }
 

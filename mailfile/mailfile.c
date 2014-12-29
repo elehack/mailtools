@@ -30,5 +30,6 @@ int main(int argc, char *argv[])
 
 done:
     Tcl_DeleteInterp(interp);
+    destroy_context(context);
     return status;
 }
