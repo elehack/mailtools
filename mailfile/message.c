@@ -90,3 +90,15 @@ int cmd_msg(ClientData data, Tcl_Interp *interp, int argc, const char *argv[])
     return TCL_ERROR;
 }
 
+void* activate_message_commands(Tcl_Interp *interp, notmuch_message_t *msg)
+{
+    Tcl_CreateCommand(interp, "msg", cmd_msg, msg, NULL);
+    Tcl_CreateCommand(interp, "tag", cmd_tag_message, msg, NULL);
+    return NULL;
+}
+
+void deactivate_message_commands(Tcl_Interp *interp, void* cmds)
+{
+    Tcl_DeleteCommand(interp, "msg");
+    Tcl_DeleteCommand(interp, "tag");
+}

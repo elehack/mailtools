@@ -71,16 +71,14 @@ cmd_matching(ClientData data, Tcl_Interp *interp,
     while (notmuch_messages_valid(results)) {
         message = notmuch_messages_get(results);
         printf("found message %s\n", notmuch_message_get_message_id(message));
-        Tcl_CreateCommand(interp, "msg", cmd_msg, message, NULL);
-        Tcl_CreateCommand(interp, "tag", cmd_tag_message, message, NULL);
+        void *msg_cmds = activate_message_commands(interp, message);
         result = Tcl_Eval(interp, script);
         if (result != TCL_OK) {
             Tcl_AddErrorInfo(interp, "\n    for message ");
             Tcl_AddErrorInfo(interp, notmuch_message_get_message_id(message));
             goto done;
         }
-        Tcl_DeleteCommand(interp, "msg");
-        Tcl_DeleteCommand(interp, "tag");
+        deactivate_message_commands(interp, msg_cmds);
         notmuch_messages_move_to_next(results);
     }
 
