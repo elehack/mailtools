@@ -4,7 +4,8 @@
 #include <tcl.h>
 #include <notmuch.h>
 
-void* activate_message_commands(Tcl_Interp *interp, notmuch_message_t *msg);
-void deactivate_message_commands(Tcl_Interp *interp, void* cmds);
+typedef struct filter_context filter_context_t;
+
+void setup_message_commands(Tcl_Interp *interp, filter_context_t *context);
 
 #endif

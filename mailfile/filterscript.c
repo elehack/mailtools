@@ -127,6 +127,7 @@ Tcl_Interp* create_script_interpreter(filter_context_t *context)
     Tcl_Interp *interp = Tcl_CreateInterp();
     Tcl_CreateCommand(interp, "database", cmd_database, context, NULL);
     Tcl_CreateCommand(interp, "matching", cmd_matching, context, NULL);
+    setup_message_commands(interp, context);
     return interp;
 }
 

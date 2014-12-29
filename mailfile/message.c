@@ -5,6 +5,8 @@
 #include <notmuch.h>
 #include <glib.h>
 
+#include "filterscript.h"
+
 typedef int (*msg_cmd_t)(Tcl_Interp*, notmuch_message_t*, int, char**);
 
 struct msg_command {
@@ -38,7 +40,13 @@ static struct msg_command msg_commands[] = {
 
 int
 cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, char *argv[]) {
-    notmuch_message_t *msg = (notmuch_message_t*) data;
+    filter_context_t *ctx = FILTER_CONTEXT(data);
+    notmuch_message_t *msg = ctx->current_message;
+
+    if (!msg) {
+        Tcl_SetResult(interp, "no active message", NULL);
+        return TCL_ERROR;
+    }
 
     for (int i = 1; i < argc; i++) {
         const char *tspec = argv[i];
@@ -71,9 +79,14 @@ int cmd_msg(ClientData data, Tcl_Interp *interp, int argc, const char *argv[])
 {
     const char *subcmd;
     struct msg_command *cmd_desc;
-    notmuch_message_t *msg = (notmuch_message_t*) data;
+    filter_context_t *ctx = FILTER_CONTEXT(data);
+    notmuch_message_t *msg = ctx->current_message;
     if (argc <= 1) {
         Tcl_SetResult(interp, "msg: no subcommand", NULL);
+        return TCL_ERROR;
+    }
+    if (!msg) {
+        Tcl_SetResult(interp, "no active message", NULL);
         return TCL_ERROR;
     }
 
@@ -90,15 +103,8 @@ int cmd_msg(ClientData data, Tcl_Interp *interp, int argc, const char *argv[])
     return TCL_ERROR;
 }
 
-void* activate_message_commands(Tcl_Interp *interp, notmuch_message_t *msg)
+void setup_message_commands(Tcl_Interp *interp, filter_context_t *context)
 {
-    Tcl_CreateCommand(interp, "msg", cmd_msg, msg, NULL);
-    Tcl_CreateCommand(interp, "tag", cmd_tag_message, msg, NULL);
-    return NULL;
-}
-
-void deactivate_message_commands(Tcl_Interp *interp, void* cmds)
-{
-    Tcl_DeleteCommand(interp, "msg");
-    Tcl_DeleteCommand(interp, "tag");
+    Tcl_CreateCommand(interp, "msg", cmd_msg, context, NULL);
+    Tcl_CreateCommand(interp, "tag", cmd_tag_message, context, NULL);
 }
