@@ -32,6 +32,29 @@ cmd_database(ClientData data, Tcl_Interp *interp,
 }
 
 static int
+iter_messages(filter_context_t *ctx, notmuch_messages_t *messages,
+        Tcl_Interp *interp, const char *script)
+{
+    notmuch_message_t *message;
+    int result;
+
+    while (notmuch_messages_valid(messages)) {
+        message = notmuch_messages_get(messages);
+        ctx->current_message = message;
+        result = Tcl_Eval(interp, script);
+        ctx->current_message = NULL;
+        if (result != TCL_OK) {
+            Tcl_AddErrorInfo(interp, "\n    for message ");
+            Tcl_AddErrorInfo(interp, notmuch_message_get_message_id(message));
+            return TCL_ERROR;
+        }
+        notmuch_messages_move_to_next(messages);
+    }
+
+    return TCL_OK;
+}
+
+static int
 cmd_matching(ClientData data, Tcl_Interp *interp,
         int argc, const char *argv[])
 {
@@ -68,21 +91,7 @@ cmd_matching(ClientData data, Tcl_Interp *interp,
         goto done;
     }
 
-    while (notmuch_messages_valid(results)) {
-        message = notmuch_messages_get(results);
-        printf("found message %s\n", notmuch_message_get_message_id(message));
-        void *msg_cmds = activate_message_commands(interp, message);
-        result = Tcl_Eval(interp, script);
-        if (result != TCL_OK) {
-            Tcl_AddErrorInfo(interp, "\n    for message ");
-            Tcl_AddErrorInfo(interp, notmuch_message_get_message_id(message));
-            goto done;
-        }
-        deactivate_message_commands(interp, msg_cmds);
-        notmuch_messages_move_to_next(results);
-    }
-
-    result = TCL_OK;
+    result = iter_messages(ctx, results, interp, script);
 done:
     if (results) {
         notmuch_messages_destroy(results);
@@ -109,6 +118,7 @@ filter_context_t* create_filter_context()
         abort();
     }
     context->database = NULL;
+    context->current_message = NULL;
     return context;
 }
 

@@ -6,6 +6,7 @@
 
 typedef struct filter_context {
     notmuch_database_t *database;
+    notmuch_message_t *current_message;
 } filter_context_t;
 
 #define FILTER_CONTEXT(x) ((struct filter_context*)(x))
