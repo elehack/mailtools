@@ -9,6 +9,6 @@ set(src main.cpp mailview.cpp htmlmail.cpp mailnetworkmanager.cpp statichttprepl
 QT4_WRAP_UI(src mailview.ui)
 add_executable (viewmail ${src})
 
-target_link_libraries(viewmail Qt4::QtGui Qt4::QtNetwork Qt4::QtWebKit ${VMIME_LIBRARIES})
+target_link_libraries(viewmail Qt4::QtGui Qt4::QtNetwork Qt4::QtWebKit ${GMIME_LIBRARIES})
 
 install (TARGETS viewmail DESTINATION bin)
