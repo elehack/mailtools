@@ -1,3 +1,5 @@
+#include <gmime/gmime.h>
+
 #include "mailview.h"
 #include "mailnetworkmanager.h"
 #include "htmlmail.h"
@@ -9,8 +11,6 @@
 #if QT_VERSION >= 0x050000
 #include <QtWebKitWidgets>
 #endif
-
-static const vmime::charset VMIME_UTF8("UTF-8");
 
 struct MailViewInternal
 {
@@ -87,75 +87,35 @@ MailView::showUrl(QString link, QString title)
     }
 }
 
-static QString
-decodeText(const vmime::text& text) {
-    std::string decoded = text.getConvertedText(VMIME_UTF8);
-    return QString::fromUtf8(decoded.c_str());
-}
-
-static QString
-decodeText(const vmime::ref<vmime::text>& text) {
-    return decodeText(*text);
-}
-
-static QString
-decodeText(const vmime::ref<vmime::headerField>& text) {
-    return decodeText(*(text->getValue().dynamicCast<const vmime::text>()));
-}
-
-static QString
-renderMailAddress(vmime::ref<vmime::mailbox> addr)
-{
-    QString name = decodeText(addr->getName());
-    std::string rawAddress = addr->getEmail(); // FIXME bad encoding
-    QString address = QString::fromUtf8(rawAddress.c_str());
-
-    if (name.isEmpty()) {
-        return address;
-    } else {
-        return name + " <" + address + ">";
-    }
-}
-
-static QString
-renderMailAddress(vmime::ref<vmime::headerField> header)
-{
-    return renderMailAddress(header->getValue().dynamicCast<vmime::mailbox>());
-}
-
-static QString
-renderAddressList(std::vector<vmime::ref<vmime::address>> addresses)
-{
-    QStringList strings;
-    for (auto addr: addresses) {
-        strings << renderMailAddress(addr.dynamicCast<vmime::mailbox>());
-    }
-    return strings.join(", ");
-}
-
-static QString
-renderAddressList(vmime::ref<vmime::headerField> addresses)
-{
-    return renderAddressList(addresses->getValue().dynamicCast<vmime::addressList>()->getAddressList());
-}
-
 void
-MailView::updateHeader(vmime::ref<vmime::message> message)
+MailView::updateHeader(GMimeMessage* message)
 {
-    auto header = message->getHeader();
-    ui->subject->setText(decodeText(header->Subject()));
-    ui->from->setText(renderMailAddress(header->From()));
+    ui->subject->setText(QString::fromUtf8(g_mime_message_get_subject(message)));
 
-    ui->to->setText(renderAddressList(header->To()));
-    auto cc = header->Cc();
-    auto ccList = cc->getValue().dynamicCast<vmime::addressList>();
-    if (ccList->isEmpty()) {
-        ui->cc->setVisible(false);
-        ui->ccLabel->setVisible(false);
+    ui->from->setText(QString::fromUtf8(g_mime_message_get_sender(message)));
+
+    InternetAddressList *addr_list;
+    char *addr_string;
+
+    addr_list = g_mime_message_get_recipients(message, GMIME_RECIPIENT_TYPE_TO);
+    addr_string = internet_address_list_to_string(addr_list, false);
+    ui->to->setText(QString::fromUtf8(addr_string));
+    g_free(addr_string);
+
+    addr_list = g_mime_message_get_recipients(message, GMIME_RECIPIENT_TYPE_CC);
+    if (addr_list != NULL) {
+        addr_string = internet_address_list_to_string(addr_list, false);
     } else {
+        addr_string = NULL;
+    }
+    if (addr_string != NULL) {
+        ui->cc->setText(QString::fromUtf8(addr_string));
+        g_free(addr_string);
         ui->cc->setVisible(true);
         ui->ccLabel->setVisible(true);
-        ui->cc->setText(renderAddressList(cc));
+    } else {
+        ui->cc->setVisible(false);
+        ui->ccLabel->setVisible(false);
     }
 }
 

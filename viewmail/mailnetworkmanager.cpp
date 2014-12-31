@@ -1,3 +1,5 @@
+#include <gmime/gmime.h>
+
 #include "mailnetworkmanager.h"
 #include "statichttpreply.h"
 
@@ -48,7 +50,7 @@ MailNetworkManager::createRequest(Operation op, const QNetworkRequest& req, QIOD
     if (scheme == "cid") {
         if (op == GetOperation) {
             qDebug() <<"getting component for" <<url;
-            vmime::ref<vmime::bodyPart> part;
+            GMimeObject* part = NULL;
             if (url.path() == "ROOT") {
                 part = theMessage->getBody();
             } else {
@@ -85,19 +87,28 @@ MailNetworkManager::replyFinished()
 }
 
 QNetworkReply*
-MailNetworkManager::makeReply(const QNetworkRequest& req, vmime::ref<vmime::bodyPart> content)
+MailNetworkManager::makeReply(const QNetworkRequest& req, GMimeObject* content)
 {
-    auto ctype = content->getHeader()->ContentType()->getValue()->generate();
-    QString mediaType = QString::fromStdString(ctype);
+    auto ctype = g_mime_object_get_content_type(content);
+    char *mtstr = g_mime_content_type_to_string(ctype);
+    QString mediaType = QString::fromUtf8(mtstr);
+    g_free(mtstr);
 
-    // FIXME Don't copy the data quite so much
-    vmime::string data;
-    {
-        vmime::utility::outputStreamStringAdapter os(data);
-        content->getBody()->getContents()->extract(os);
+    g_return_val_if_fail(GMIME_IS_PART(content), NULL);
+
+    GMimeDataWrapper *wrapper = g_mime_part_get_content_object(GMIME_PART(content));
+    GMimeStream *stream = g_mime_data_wrapper_get_stream(wrapper);
+    g_return_val_if_fail(stream != NULL, NULL);
+
+    QByteArray buffer;
+    QByteArray tmp(4096, 0);
+    while (!g_mime_stream_eos(stream)) {
+        ssize_t read = g_mime_stream_read(stream, tmp.data(), 4096);
+        g_return_val_if_fail(read >= 0, NULL);
+        buffer.append(tmp.data(), read);
     }
-    qDebug() <<"making reply of length" <<data.size() <<"and type" <<mediaType;
-    QByteArray buffer(data.c_str(), data.size());
+
+    qDebug() <<"making reply of length" <<buffer.size() <<"and type" <<mediaType;
 
     return StaticHTTPReply::ok(req, buffer, mediaType);
 }

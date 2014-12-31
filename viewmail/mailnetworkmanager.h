@@ -4,6 +4,7 @@
 #include <QtNetwork>
 
 #include "htmlmail.h"
+#include "gmime-decls.h"
 
 class MailNetworkManager : public QNetworkAccessManager
 {
@@ -33,7 +34,7 @@ protected:
     virtual QNetworkReply* createRequest(Operation op, const QNetworkRequest & req, QIODevice * outgoingData = 0);
 
 private:
-    QNetworkReply* makeReply(const QNetworkRequest& req, vmime::ref<vmime::bodyPart> content);
+    QNetworkReply* makeReply(const QNetworkRequest& req, GMimeObject* content);
 
     bool f_remoteEnabled;
     QPointer<HTMLMailMessage> theMessage;

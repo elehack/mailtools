@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QUrl>
 
-#include <vmime/vmime.hpp>
+#include "gmime-decls.h"
 
 class MailViewInternal;
 class HTMLMailMessage;
@@ -32,13 +32,14 @@ public slots:
     void browseUrl(QUrl url);
     void showUrl(QString link, QString title);
 
-    void updateHeader(vmime::ref<vmime::message> message);
 
     void handleBlockedImage(const QNetworkRequest& req);
 
     void bodyLoadStarted();
 
 private:
+    void updateHeader(GMimeMessage* message);
+
     MailViewInternal* const internal;
     Ui::MailViewWindow* ui;
 };
