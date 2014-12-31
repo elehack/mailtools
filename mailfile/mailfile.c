@@ -9,10 +9,6 @@
 #include "logging.h"
 #include "filterscript.h"
 
-static int flag_debug = 0;
-static int flag_quiet = 0;
-static int flag_dry = 0;
-
 int main(int argc, char *argv[])
 {
     Tcl_Interp *interp = NULL;
@@ -23,27 +19,36 @@ int main(int argc, char *argv[])
     int status = 0;
     poptContext optCon;
     const char *filename;
+    int opt;
 
     struct poptOption main_options[] = {
-        { "debug", 'd', POPT_ARG_NONE, &flag_debug, "Print debugging messages", NULL },
-        { "quiet", 'q', POPT_ARG_NONE, &flag_quiet, "Suppress non-error messages", NULL },
-        { "dry-run", 'n', POPT_ARG_NONE, &flag_dry, "Don't make any changes", NULL },
+        { "debug", 'd', POPT_ARG_NONE, NULL, 'd', "Print debugging messages", NULL },
+        { "quiet", 'q', POPT_ARG_NONE, NULL, 'q', "Suppress non-error messages", NULL },
+        { "dry-run", 'n', POPT_ARG_NONE, NULL, 'n', "Don't make any changes", NULL },
         POPT_AUTOHELP
         { NULL, 0, 0, NULL, 0 }
     };
 
+    context = create_filter_context();
+
     optCon = poptGetContext(NULL, argc, argv, main_options, 0);
-    while (poptGetNextOpt(optCon) > 0) {
-        /* pass */
-    }
-    if (flag_debug) {
-        log_level = LOG_DEBUG;
-    } else if (flag_quiet) {
-        log_level = LOG_QUIET;
+    while ((opt = poptGetNextOpt(optCon)) > 0) {
+        switch (opt) {
+            case 'd':
+                log_level = LOG_DEBUG;
+                break;
+            case 'q':
+                log_level = LOG_QUIET;
+                break;
+            case 'n':
+                context->dry_run = true;
+                break;
+            default:
+                log_error("unexpected argument %c", opt);
+                abort();
+        }
     }
 
-    context = create_filter_context();
-    context->dry_run = flag_dry;
     interp = create_script_interpreter(context);
 
     while ((filename = poptGetArg(optCon)) != NULL) {
