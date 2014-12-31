@@ -93,20 +93,22 @@ MailNetworkManager::makeReply(const QNetworkRequest& req, GMimeObject* content)
     char *mtstr = g_mime_content_type_to_string(ctype);
     QString mediaType = QString::fromUtf8(mtstr);
     g_free(mtstr);
+    const char *enc = g_mime_content_type_get_parameter(ctype, "charset");
+    if (enc != NULL) {
+        mediaType += "; charset=\"";
+        mediaType += QString::fromUtf8(enc);
+        mediaType += "\"";
+    }
 
     g_return_val_if_fail(GMIME_IS_PART(content), NULL);
 
+    GMimeStream *stream = g_mime_stream_mem_new();
     GMimeDataWrapper *wrapper = g_mime_part_get_content_object(GMIME_PART(content));
-    GMimeStream *stream = g_mime_data_wrapper_get_stream(wrapper);
-    g_return_val_if_fail(stream != NULL, NULL);
+    g_mime_data_wrapper_write_to_stream(wrapper, stream);
+    GByteArray *bytes = g_mime_stream_mem_get_byte_array(GMIME_STREAM_MEM(stream));
 
-    QByteArray buffer;
-    QByteArray tmp(4096, 0);
-    while (!g_mime_stream_eos(stream)) {
-        ssize_t read = g_mime_stream_read(stream, tmp.data(), 4096);
-        g_return_val_if_fail(read >= 0, NULL);
-        buffer.append(tmp.data(), read);
-    }
+    QByteArray buffer((const char*) bytes->data, bytes->len);
+    g_object_unref(stream);
 
     qDebug() <<"making reply of length" <<buffer.size() <<"and type" <<mediaType;
 
