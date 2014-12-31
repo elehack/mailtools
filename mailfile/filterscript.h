@@ -4,9 +4,12 @@
 #include <tcl.h>
 #include <notmuch.h>
 
+#include <stdbool.h>
+
 typedef struct filter_context {
     notmuch_database_t *database;
     notmuch_message_t *current_message;
+    bool dry_run;
 } filter_context_t;
 
 #define FILTER_CONTEXT(x) ((struct filter_context*)(x))

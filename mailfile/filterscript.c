@@ -3,6 +3,7 @@
 
 #include "message.h"
 #include "filterscript.h"
+#include "logging.h"
 
 static int
 cmd_database(ClientData data, Tcl_Interp *interp,
@@ -20,8 +21,11 @@ cmd_database(ClientData data, Tcl_Interp *interp,
     if (ctx->database) {
         notmuch_database_destroy(ctx->database);
     }
+
+    log_info("opening database %s", argv[1]);
     
-    status = notmuch_database_open(argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE,
+    status = notmuch_database_open(argv[1],
+            ctx->dry_run ? 0 : NOTMUCH_DATABASE_MODE_READ_WRITE,
             &(ctx->database));
     if (status != NOTMUCH_STATUS_SUCCESS) {
         Tcl_SetResult(interp, "cannot open database", NULL);
@@ -119,6 +123,7 @@ filter_context_t* create_filter_context()
     }
     context->database = NULL;
     context->current_message = NULL;
+    context->dry_run = false;
     return context;
 }
 

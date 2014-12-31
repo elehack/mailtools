@@ -5,7 +5,7 @@ OBJS = $(patsubst %.c, %.o, $(SOURCES))
 
 CFLAGS ?= -g
 CC ?= gcc
-LIBS = -lnotmuch -ltcl
+LIBS = -lnotmuch -ltcl -lpopt
 
 GLIB_CPPFLAGS = $(shell pkg-config --cflags glib-2.0)
 GLIB_LDFLAGS = $(shell pkg-config --libs glib-2.0)

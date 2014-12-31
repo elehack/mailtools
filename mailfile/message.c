@@ -50,13 +50,17 @@ cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, char *argv[]) {
 
     for (int i = 1; i < argc; i++) {
         const char *tspec = argv[i];
-        notmuch_status_t status;
+        notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
         switch (*tspec) {
             case '+':
-                status = notmuch_message_add_tag(msg, tspec+1);
+                if (!ctx->dry_run) {
+                    status = notmuch_message_add_tag(msg, tspec+1);
+                }
                 break;
             case '-':
-                status = notmuch_message_remove_tag(msg, tspec+1);
+                if (!ctx->dry_run) {
+                    status = notmuch_message_remove_tag(msg, tspec+1);
+                }
                 break;
             default:
                 Tcl_SetResult(interp,
