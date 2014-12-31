@@ -42,6 +42,7 @@ int
 cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, char *argv[]) {
     filter_context_t *ctx = FILTER_CONTEXT(data);
     notmuch_message_t *msg = ctx->current_message;
+    log_debug("tagging message %s", notmuch_message_get_message_id(msg));
 
     if (!msg) {
         Tcl_SetResult(interp, "no active message", NULL);
@@ -53,11 +54,13 @@ cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, char *argv[]) {
         notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
         switch (*tspec) {
             case '+':
+                log_debug("adding tag %s", tspec + 1);
                 if (!ctx->dry_run) {
                     status = notmuch_message_add_tag(msg, tspec+1);
                 }
                 break;
             case '-':
+                log_debug("removing tag %s", tspec + 1);
                 if (!ctx->dry_run) {
                     status = notmuch_message_remove_tag(msg, tspec+1);
                 }

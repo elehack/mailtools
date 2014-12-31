@@ -41,8 +41,10 @@ iter_messages(filter_context_t *ctx, notmuch_messages_t *messages,
 {
     notmuch_message_t *message;
     int result;
+    int n = 0;
 
     while (notmuch_messages_valid(messages)) {
+        n += 1;
         message = notmuch_messages_get(messages);
         ctx->current_message = message;
         result = Tcl_Eval(interp, script);
@@ -50,12 +52,12 @@ iter_messages(filter_context_t *ctx, notmuch_messages_t *messages,
         if (result != TCL_OK) {
             Tcl_AddErrorInfo(interp, "\n    for message ");
             Tcl_AddErrorInfo(interp, notmuch_message_get_message_id(message));
-            return TCL_ERROR;
+            return -1;
         }
         notmuch_messages_move_to_next(messages);
     }
 
-    return TCL_OK;
+    return n;
 }
 
 static int
@@ -95,7 +97,11 @@ cmd_matching(ClientData data, Tcl_Interp *interp,
         goto done;
     }
 
-    result = iter_messages(ctx, results, interp, script);
+    int n = iter_messages(ctx, results, interp, script);
+    if (n >= 0) {
+        log_info("processed %d messages", n);
+        result = TCL_OK;
+    }
 done:
     if (results) {
         notmuch_messages_destroy(results);
