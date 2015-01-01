@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <tcl.h>
+#include <glib.h>
 
 #include "message.h"
 #include "filterscript.h"
@@ -60,11 +61,24 @@ iter_messages(filter_context_t *ctx, notmuch_messages_t *messages,
     return n;
 }
 
+static GString*
+concat_strings(const char *argv[], int start, int end)
+{
+    GString* str = g_string_new(NULL);
+    for (int i = start; i < end; i++) {
+        if (str->len) {
+            g_string_append_c(str, ' ');
+        }
+        g_string_append(str, argv[i]);
+    }
+    return str;
+}
+
 static int
 cmd_matching(ClientData data, Tcl_Interp *interp,
         int argc, const char *argv[])
 {
-    char *qstr, *script;
+    char *script;
     Tcl_Command *cmd;
     struct filter_context *ctx = FILTER_CONTEXT(data);
     notmuch_database_t *nm_db = ctx->database;
@@ -72,20 +86,22 @@ cmd_matching(ClientData data, Tcl_Interp *interp,
     notmuch_messages_t *results;
     notmuch_message_t *message;
     int result = TCL_ERROR;
+    GString *qstr;
 
     if (!nm_db) {
         Tcl_SetResult(interp, "no database open", NULL);
         return TCL_ERROR;
     }
 
-    if (argc != 3) {
+    if (argc < 3) {
         Tcl_SetResult(interp, "matching: invalid arguments", NULL);
         return TCL_ERROR;
     }
 
-    qstr = argv[1];
-    script = argv[2];
-    query = notmuch_query_create(nm_db, qstr);
+    qstr = concat_strings(argv, 1, argc - 1);
+    query = notmuch_query_create(nm_db, qstr->str);
+    g_string_free(qstr, TRUE);
+    script = argv[argc - 1];
     if (query == NULL) {
         Tcl_SetResult(interp, "matching: could not create query", NULL);
         goto done;
