@@ -31,10 +31,50 @@ msg_id(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
     return TCL_OK;
 }
 
+static int
+msg_header(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
+    if (argc != 1) {
+        Tcl_SetResult(interp, "expected: msg header <header>", NULL);
+        return TCL_ERROR;
+    }
 
+    const char *value = notmuch_message_get_header(msg, argv[0]);
+
+    if (value == NULL) {
+        return TCL_ERROR;
+    }
+
+    Tcl_SetResult(interp, g_strdup(value), g_free);
+    return TCL_OK;
+}
+
+static int
+msg_filenames(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
+    if (argc != 0) {
+        Tcl_SetResult(interp, "msg filenames takes no arguments", NULL);
+        return TCL_ERROR;
+    }
+
+    Tcl_Obj* list = Tcl_NewListObj(0, NULL);
+    if (!list) {
+        return TCL_ERROR;
+    }
+    notmuch_filenames_t *fns = notmuch_message_get_filenames(msg);
+    while (notmuch_filenames_valid(fns)) {
+        const char *fn = notmuch_filenames_get(fns);
+        Tcl_ListObjAppendElement(interp, list, Tcl_NewStringObj(fn, -1));
+        notmuch_filenames_move_to_next(fns);
+    }
+    notmuch_filenames_destroy(fns);
+
+    Tcl_SetObjResult(interp, list);
+    return TCL_OK;
+}
 
 static struct msg_command msg_commands[] = {
     { "id", msg_id },
+    { "header", msg_header },
+    { "filenames", msg_filenames },
     { NULL }
 };
 
