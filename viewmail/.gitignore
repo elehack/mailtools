@@ -1,1 +1,4 @@
 /viewmail
+moc_*.cpp
+ui_*.h
+viewmail_automoc.cpp
