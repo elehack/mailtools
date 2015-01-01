@@ -9,11 +9,15 @@ include(FindPkgConfig)
 find_package(Qt4 REQUIRED)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GMIME REQUIRED gmime-2.6 glib-2.0)
-pkg_check_modules(YAML yaml-cpp)
+
+set(ENABLE_ADDRESS_BOOK false CACHE BOOL "Enable address book code")
+
 
 add_subdirectory (mailfile)
 add_subdirectory (viewmail)
 
-if(${YAML_FOUND})
+if(${ENABLE_ADDRESS_BOOK})
+    pkg_check_modules(YAML REQUIRED yaml-cpp)
+
     add_subdirectory (addresses)
 endif()
