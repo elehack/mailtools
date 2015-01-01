@@ -129,6 +129,19 @@ done:
     return result;
 }
 
+static int
+cmd_new(ClientData data, Tcl_Interp *interp,
+        int argc, const char *argv[])
+{
+    const char *nargs[argc + 1];
+    nargs[0] = "new";
+    nargs[1] = "tag:new";
+    for (int i = 1; i < argc; i++) {
+        nargs[i+1] = argv[i];
+    }
+    return cmd_matching(data, interp, argc+1, nargs);
+}
+
 void destroy_context(struct filter_context* ctx)
 {
     if (ctx->database) {
@@ -154,6 +167,7 @@ Tcl_Interp* create_script_interpreter(filter_context_t *context)
     Tcl_Interp *interp = Tcl_CreateInterp();
     Tcl_CreateCommand(interp, "database", cmd_database, context, NULL);
     Tcl_CreateCommand(interp, "matching", cmd_matching, context, NULL);
+    Tcl_CreateCommand(interp, "new", cmd_new, context, NULL);
     setup_message_commands(interp, context);
     return interp;
 }
