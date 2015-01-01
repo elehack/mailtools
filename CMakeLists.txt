@@ -7,8 +7,10 @@ include(FindPkgConfig)
 
 find_package(Qt4 REQUIRED)
 pkg_check_modules(GMIME REQUIRED gmime-2.6 glib-2.0)
-pkg_check_modules(YAML REQUIRED yaml-cpp)
+pkg_check_modules(YAML yaml-cpp)
 
-include_directories ("${PROJECT_SOURCE_DIR}/viewmail"  "${PROJECT_SOURCE_DIR}/addresses")
-add_subdirectory (addresses)
+if(${YAML_FOUND})
+    add_subdirectory (addresses)
+endif()
+
 add_subdirectory (viewmail)
