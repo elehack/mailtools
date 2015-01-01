@@ -55,6 +55,7 @@ iter_messages(filter_context_t *ctx, notmuch_messages_t *messages,
             Tcl_AddErrorInfo(interp, notmuch_message_get_message_id(message));
             return -1;
         }
+        notmuch_message_destroy(message);
         notmuch_messages_move_to_next(messages);
     }
 
@@ -115,7 +116,7 @@ cmd_matching(ClientData data, Tcl_Interp *interp,
 
     int n = iter_messages(ctx, results, interp, script);
     if (n >= 0) {
-        log_info("processed %d messages", n);
+        log_debug("processed %d messages", n);
         result = TCL_OK;
     }
 done:

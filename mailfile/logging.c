@@ -3,7 +3,7 @@
 
 #include "logging.h"
 
-int log_level;
+int log_level = LOG_NORMAL;
 
 void log_debug(const char *fmt, ...)
 {
