@@ -1,3 +1,2 @@
 mailfile
 *.o
-!Makefile
