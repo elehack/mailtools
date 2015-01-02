@@ -18,6 +18,7 @@ void md_setup(struct md_fixture *fix, void *data)
         perror("mkdtemp");
         abort();
     }
+    g_debug("creating temporary maildir %s", fix->maildir);
     char *subdir = g_strdup_printf("%s/cur", fix->maildir);
     if (mkdir(subdir, 0700)) {
         perror(subdir);
@@ -75,6 +76,7 @@ void md_test_deliver_link(struct md_fixture *fix, void *data)
     int file_count = 0;
     const char *path;
     while ((path = g_dir_read_name(dir))) {
+        g_debug("found delivered file %s", path);
         file_count += 1;
     }
     g_dir_close(dir);
