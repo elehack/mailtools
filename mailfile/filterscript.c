@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 #include <tcl.h>
 #include <glib.h>
@@ -79,7 +80,7 @@ static int
 cmd_matching(ClientData data, Tcl_Interp *interp,
         int argc, const char *argv[])
 {
-    char *script;
+    const char *script;
     Tcl_Command *cmd;
     struct filter_context *ctx = FILTER_CONTEXT(data);
     notmuch_database_t *nm_db = ctx->database;

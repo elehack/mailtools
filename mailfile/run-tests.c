@@ -2,6 +2,8 @@
 
 #include "logging.h"
 
+extern void register_maildir_tests(void);
+
 int main(int argc, char *argv[])
 {
     g_test_init(&argc, &argv, NULL);

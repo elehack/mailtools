@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <tcl.h>
 #include <notmuch.h>
 #include <glib.h>
 
 #include "filterscript.h"
+#include "logging.h"
 
-typedef int (*msg_cmd_t)(Tcl_Interp*, notmuch_message_t*, int, char**);
+typedef int (*msg_cmd_t)(Tcl_Interp*, notmuch_message_t*, int, const char**);
 
 struct msg_command {
     const char *name;
@@ -79,7 +81,7 @@ static struct msg_command msg_commands[] = {
 };
 
 int
-cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, char *argv[]) {
+cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, const char *argv[]) {
     filter_context_t *ctx = FILTER_CONTEXT(data);
     notmuch_message_t *msg = ctx->current_message;
     log_debug("tagging message %s", notmuch_message_get_message_id(msg));

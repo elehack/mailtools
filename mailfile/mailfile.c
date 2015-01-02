@@ -9,7 +9,7 @@
 #include "logging.h"
 #include "filterscript.h"
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
     Tcl_Interp *interp = NULL;
     filter_context_t *context = NULL;
