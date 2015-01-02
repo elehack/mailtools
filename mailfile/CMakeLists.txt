@@ -17,6 +17,7 @@ add_library (mf-internals ${common_src})
 
 add_executable (mailfile mailfile.c)
 target_link_libraries(mailfile mf-internals ${app_libs})
+install (TARGETS mailfile DESTINATION bin)
 
 file(GLOB test_src test_*.c)
 
