@@ -53,6 +53,18 @@ msg_header(Tcl_Interp *interp, notmuch_message_t *msg, int argc, const char *arg
 }
 
 static int
+msg_date(Tcl_Interp *interp, notmuch_message_t *msg, int argc, const char *argv[]) {
+    if (argc != 0) {
+        tcl_result_printf(interp, "expected: msg date");
+        return TCL_ERROR;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewLongObj(notmuch_message_get_date(msg)));
+
+    return TCL_OK;
+}
+
+static int
 msg_filenames(Tcl_Interp *interp, notmuch_message_t *msg, int argc, const char *argv[]) {
     if (argc != 0) {
         tcl_result_printf(interp, "msg filenames takes no arguments");
@@ -78,6 +90,7 @@ msg_filenames(Tcl_Interp *interp, notmuch_message_t *msg, int argc, const char *
 static struct msg_command msg_commands[] = {
     { "id", msg_id },
     { "header", msg_header },
+    { "date", msg_date },
     { "filenames", msg_filenames },
     { NULL }
 };
@@ -160,6 +173,7 @@ cmd_move_message(ClientData data, Tcl_Interp *interp, int argc, const char *argv
     fns = NULL;
 
     if (nmoved == 0) {
+        Tcl_SetObjResult(interp, Tcl_NewIntObj(0));
         status = TCL_OK;
         goto done;
     }
@@ -228,6 +242,7 @@ cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, const char *argv[
             return TCL_ERROR;
         }
     }
+    notmuch_message_tags_to_maildir_flags(msg);
 
     return TCL_OK;
 }

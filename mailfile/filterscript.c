@@ -169,6 +169,7 @@ filter_context_t* create_filter_context()
 Tcl_Interp* create_script_interpreter(filter_context_t *context)
 {
     Tcl_Interp *interp = Tcl_CreateInterp();
+    Tcl_Init(interp);
     Tcl_CreateCommand(interp, "database", cmd_database, context, NULL);
     Tcl_CreateCommand(interp, "matching", cmd_matching, context, NULL);
     Tcl_CreateCommand(interp, "new", cmd_new, context, NULL);
