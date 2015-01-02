@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <tcl.h>
 #include <notmuch.h>
@@ -82,6 +83,115 @@ static struct msg_command msg_commands[] = {
 };
 
 int
+cmd_move_message(ClientData data, Tcl_Interp *interp, int argc, const char *argv[]) {
+    filter_context_t *ctx = FILTER_CONTEXT(data);
+    notmuch_message_t *msg = ctx->current_message;
+    notmuch_status_t nmrc;
+
+    if (argc != 2) {
+        tcl_result_printf("wrong # of args: got %d, expected move folder", argc);
+        return TCL_ERROR;
+    }
+    
+    const char *folder = argv[1];
+    if (folder[0] == '/') {
+        tcl_result_printf("invalid folder '%s'", folder);
+        return TCL_ERROR;
+    }
+
+    log_debug("moving message %s to folder %s",
+              notmuch_message_get_message_id(msg), folder);
+    char *folder_path = g_strdup_printf("%s/%s",
+                                        notmuch_database_get_path(ctx->database),
+                                        folder);
+    int status = TCL_ERROR;
+
+    notmuch_filenames_t *fns = notmuch_message_get_filenames(msg);
+    int nmoved = 0;
+    while (notmuch_filenames_valid(fns)) {
+        const char *fn = notmuch_filenames_get(fns);
+        char *new_fn = NULL;
+        if (g_str_has_prefix(fn, folder_path)) {
+            log_debug("file %s already in folder %s", fn, folder);
+        } else if (ctx->dry_run) {
+            log_debug("moving %s to folder %s", fn, folder);
+        } else {
+            log_debug("moving %s to folder %s", fn, folder);
+            int rc = maildir_deliver_link(fn, folder_path, &new_fn);
+            if (rc) {
+                tcl_result_printf(interp, "delivery error: %s", strerror(errno));
+                goto done;
+            }
+            log_debug("delivered as %s", new_fn);
+            nmrc = notmuch_database_add_message(ctx->database, new_fn, NULL);
+            switch (nmrc) {
+                case NOTMUCH_STATUS_SUCCESS:
+                    log_warning("%s: message was not in database", new_fn);
+                case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+                    log_debug("added new file to database");
+                    break;
+                default:
+                    tcl_result_printf(interp, "error adding %s to database: %s",
+                                      new_fn,
+                                      notmuch_status_to_string(nmrc));
+                    goto done;
+            }
+            nmrc = notmuch_database_remove_message(ctx->database, fn);
+            switch (nmrc) {
+                case NOTMUCH_STATUS_SUCCESS:
+                    log_warning("%s: file was only file for message", fn);
+                case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+                    log_debug("removed file %s from database", fn);
+                    break;
+                default:
+                    tcl_result_printf(interp, "error removing %s from database: %s",
+                                      fn, notmuch_status_to_string(nmrc));
+                    goto done;
+            }
+            if (unlink(fn)) {
+                tcl_result_printf(interp, "error unlinking %s: %s", fn, strerror(errno));
+                goto done;
+            }
+            nmoved += 1;
+        }
+        notmuch_filenames_move_to_next(fns);
+    }
+    notmuch_filenames_destroy(fns);
+    fns = NULL;
+
+    if (nmoved == 0) {
+        status = TCL_OK;
+        goto done;
+    }
+
+    log_debug("syncing maildir flags");
+    
+    const char *mid = notmuch_message_get_message_id(msg);
+    nmrc = notmuch_database_find_message(ctx->database, mid, &msg);
+    if (nmrc != NOTMUCH_STATUS_SUCCESS) {
+        tcl_result_printf(interp, "cannot re-find message %s", mid);
+        goto done;
+    }
+    notmuch_message_destroy(ctx->current_message);
+    ctx->current_message = msg;
+    nmrc = notmuch_message_tags_to_maildir_flags(msg);
+    if (nmrc != NOTMUCH_STATUS_SUCCESS) {
+        tcl_result_printf(interp, "error syncing tags back to flags");
+        goto done;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(nmoved));
+    status = TCL_OK;
+
+done:
+    if (fns) {
+        notmuch_filenames_destroy(fns);
+    }
+    g_free(folder_path);
+    return status;
+}
+
+int
 cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, const char *argv[]) {
     filter_context_t *ctx = FILTER_CONTEXT(data);
     notmuch_message_t *msg = ctx->current_message;
@@ -152,4 +262,5 @@ void setup_message_commands(Tcl_Interp *interp, filter_context_t *context)
 {
     Tcl_CreateCommand(interp, "msg", cmd_msg, context, NULL);
     Tcl_CreateCommand(interp, "tag", cmd_tag_message, context, NULL);
+    Tcl_CreateCommand(interp, "move", cmd_move_message, context, NULL);
 }

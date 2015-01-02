@@ -51,6 +51,7 @@ iter_messages(filter_context_t *ctx, notmuch_messages_t *messages,
         message = notmuch_messages_get(messages);
         ctx->current_message = message;
         result = Tcl_Eval(interp, script);
+        message = ctx->current_message; // this may have changed
         ctx->current_message = NULL;
         if (result != TCL_OK) {
             Tcl_AddErrorInfo(interp, "\n    for message ");

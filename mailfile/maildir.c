@@ -31,6 +31,7 @@ md_make_filename(struct stat *sbuf)
     pid_t pid = getpid();
     char *buf = NULL;
     int size = 0;
+    md_counter++;
     while (buf == NULL) {
         if (size > 0) {
             buf = malloc(size);
@@ -40,7 +41,7 @@ md_make_filename(struct stat *sbuf)
                 "%ld.M%ldP%dV%ldI%ld_%d.%s,S=%ld",
                 tv.tv_sec, tv.tv_usec, pid,
                 sbuf->st_dev, sbuf->st_ino,
-                ++md_counter,
+                md_counter,
                 md_hostname,
                 sbuf->st_size);
         if (rc < 0) {
@@ -71,7 +72,7 @@ int maildir_init(void)
     return 0;
 }
 
-int maildir_deliver_link(const char *src, const char *mdir)
+int maildir_deliver_link(const char *src, const char *mdir, char **out_fn)
 {
     int status = -1;  // default to failure
     char *fn = NULL;
@@ -111,6 +112,11 @@ int maildir_deliver_link(const char *src, const char *mdir)
         log_error("delivery to %s failed: %s", mdir, strerror(errno));
     } else {
         status = 0;
+        if (out_fn) {
+            // transfer ownership to the client
+            *out_fn = tgt;
+            tgt = NULL;
+        }
     }
 
 done:

@@ -7,6 +7,7 @@
 #include <popt.h>
 
 #include "logging.h"
+#include "maildir.h"
 #include "filterscript.h"
 
 int main(int argc, const char *argv[])
@@ -29,6 +30,7 @@ int main(int argc, const char *argv[])
         { NULL, 0, 0, NULL, 0 }
     };
 
+    maildir_init();
     context = create_filter_context();
 
     optCon = poptGetContext(NULL, argc, argv, main_options, 0);

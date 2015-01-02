@@ -73,9 +73,11 @@ void md_test_deliver_link(struct md_fixture *fix, void *data)
     if (!g_file_set_contents(fn, content, strlen(content), NULL)) {
         abort();
     }
-    int rc = maildir_deliver_link(fn, fix->maildir);
+    char *out;
+    int rc = maildir_deliver_link(fn, fix->maildir, &out);
     g_free(fn);
     g_assert_cmpint(rc, ==, 0);
+    g_assert_nonnull(out);
 
     char *new_dir = g_strdup_printf("%s/new", fix->maildir);
     GDir *dir = g_dir_open(new_dir, 0, NULL);
