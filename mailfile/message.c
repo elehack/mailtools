@@ -18,7 +18,7 @@ struct msg_command {
 };
 
 static int
-msg_id(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
+msg_id(Tcl_Interp *interp, notmuch_message_t *msg, int argc, const char *argv[]) {
     if (argc != 0) {
         tcl_result_printf(interp, "msg id takes no arguments");
         return TCL_ERROR;
@@ -35,7 +35,7 @@ msg_id(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
 }
 
 static int
-msg_header(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
+msg_header(Tcl_Interp *interp, notmuch_message_t *msg, int argc, const char *argv[]) {
     if (argc != 1) {
         tcl_result_printf(interp, "expected: msg header <header>");
         return TCL_ERROR;
@@ -52,7 +52,7 @@ msg_header(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
 }
 
 static int
-msg_filenames(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
+msg_filenames(Tcl_Interp *interp, notmuch_message_t *msg, int argc, const char *argv[]) {
     if (argc != 0) {
         tcl_result_printf(interp, "msg filenames takes no arguments");
         return TCL_ERROR;
