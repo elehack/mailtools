@@ -8,6 +8,7 @@
 
 #include "filterscript.h"
 #include "logging.h"
+#include "strutil.h"
 
 typedef int (*msg_cmd_t)(Tcl_Interp*, notmuch_message_t*, int, const char**);
 
@@ -19,7 +20,7 @@ struct msg_command {
 static int
 msg_id(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
     if (argc != 0) {
-        Tcl_SetResult(interp, "msg id takes no arguments", NULL);
+        tcl_result_printf(interp, "msg id takes no arguments");
         return TCL_ERROR;
     }
 
@@ -29,14 +30,14 @@ msg_id(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
         return TCL_ERROR;
     }
 
-    Tcl_SetResult(interp, msg_id, free);
+    tcl_result_printf(interp, "%s", msg_id);
     return TCL_OK;
 }
 
 static int
 msg_header(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
     if (argc != 1) {
-        Tcl_SetResult(interp, "expected: msg header <header>", NULL);
+        tcl_result_printf(interp, "expected: msg header <header>");
         return TCL_ERROR;
     }
 
@@ -46,14 +47,14 @@ msg_header(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
         return TCL_ERROR;
     }
 
-    Tcl_SetResult(interp, g_strdup(value), g_free);
+    tcl_result_printf(interp, "%s", value);
     return TCL_OK;
 }
 
 static int
 msg_filenames(Tcl_Interp *interp, notmuch_message_t *msg, int argc, char *argv[]) {
     if (argc != 0) {
-        Tcl_SetResult(interp, "msg filenames takes no arguments", NULL);
+        tcl_result_printf(interp, "msg filenames takes no arguments");
         return TCL_ERROR;
     }
 
@@ -87,7 +88,7 @@ cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, const char *argv[
     log_debug("tagging message %s", notmuch_message_get_message_id(msg));
 
     if (!msg) {
-        Tcl_SetResult(interp, "no active message", NULL);
+        tcl_result_printf(interp, "no active message");
         return TCL_ERROR;
     }
 
@@ -108,15 +109,12 @@ cmd_tag_message(ClientData data, Tcl_Interp *interp, int argc, const char *argv[
                 }
                 break;
             default:
-                Tcl_SetResult(interp,
-                        g_strdup_printf("invalid tag spec %s", tspec),
-                        g_free);
+                tcl_result_printf(interp, "invalid tag spec %s", tspec);
                 return TCL_ERROR;
                 break;
         }
         if (status != NOTMUCH_STATUS_SUCCESS) {
-            Tcl_SetResult(interp, g_strdup_printf("failed to apply tag %s", tspec),
-                    g_free);
+            tcl_result_printf(interp, "failed to apply tag %s", tspec);
             return TCL_ERROR;
         }
     }
@@ -131,11 +129,11 @@ int cmd_msg(ClientData data, Tcl_Interp *interp, int argc, const char *argv[])
     filter_context_t *ctx = FILTER_CONTEXT(data);
     notmuch_message_t *msg = ctx->current_message;
     if (argc <= 1) {
-        Tcl_SetResult(interp, "msg: no subcommand", NULL);
+        tcl_result_printf(interp, "msg: no subcommand");
         return TCL_ERROR;
     }
     if (!msg) {
-        Tcl_SetResult(interp, "no active message", NULL);
+        tcl_result_printf(interp, "no active message");
         return TCL_ERROR;
     }
 
@@ -146,9 +144,7 @@ int cmd_msg(ClientData data, Tcl_Interp *interp, int argc, const char *argv[])
         }
     }
 
-    Tcl_Obj* obj = Tcl_NewObj();
-    Tcl_AppendStringsToObj(obj, "msg: invalid subcommand ", subcmd, NULL);
-    Tcl_SetObjResult(interp, obj);
+    tcl_result_printf(interp, "msg: invalid subcommand %s", subcmd);
     return TCL_ERROR;
 }
 
