@@ -37,9 +37,10 @@ md_make_filename(struct stat *sbuf)
             if (!buf) return NULL;
         }
         int rc = snprintf(buf, size,
-                "%ld.M%ldP%dV%ldI%ld.%s,S=%ld",
+                "%ld.M%ldP%dV%ldI%ld_%d.%s,S=%ld",
                 tv.tv_sec, tv.tv_usec, pid,
                 sbuf->st_dev, sbuf->st_ino,
+                ++md_counter,
                 md_hostname,
                 sbuf->st_size);
         if (rc < 0) {
@@ -62,7 +63,10 @@ int maildir_init(void)
         return -1;
     }
 
-    md_hostname = name.nodename;
+    md_hostname = strdup(name.nodename);
+    if (!md_hostname) {
+        return -1;
+    }
     log_debug("initialized maildir delivery for host %s", md_hostname);
     return 0;
 }
