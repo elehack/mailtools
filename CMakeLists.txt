@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_C_FLAGS -std=gnu99)
 set(CMAKE_CXX_FLAGS -std=gnu++11)
 set(CMAKE_CXX_FLAGS_RELEASE "-DQT_NO_DEBUG -DQT_NO_DEBUG_OUTPUT")
+
+include(CheckCSourceCompiles)
+include(CheckCSourceRuns)
 
 include(FindPkgConfig)
 
