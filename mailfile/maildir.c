@@ -73,6 +73,8 @@ int maildir_deliver_link(const char *src, const char *mdir)
     char *fn = NULL;
     char *tgt = NULL;
 
+    log_debug("delivering file %s to maildir %s", src, mdir);
+
     struct stat buf;
     if (stat(src, &buf)) {
         log_error("maildir: %s: %s", src, strerror(errno));
@@ -83,6 +85,7 @@ int maildir_deliver_link(const char *src, const char *mdir)
     if (!fn) {
         goto done;
     }
+    log_debug("delivering mail with filename %s", fn);
 
     size_t md_len = strlen(mdir);
     size_t fn_len = strlen(fn);
@@ -97,6 +100,8 @@ int maildir_deliver_link(const char *src, const char *mdir)
     memcpy(tgt, mdir, md_len);
     memcpy(tgt + md_len, "/new/", 5);
     memcpy(tgt + md_len + 5, fn, fn_len);
+
+    log_debug("delivering mail to file %s", tgt);
 
     if (link(src, tgt)) {
         log_error("delivery to %s failed: %s", mdir, strerror(errno));
