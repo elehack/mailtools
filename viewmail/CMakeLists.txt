@@ -6,6 +6,7 @@ include_directories (BEFORE ${GMIME_INCLUDE_DIRS})
 include_directories (BEFORE ${EXTRA_INCLUDE_DIRS})
 
 set(src main.cpp mailview.cpp htmlmail.cpp mailnetworkmanager.cpp statichttpreply.cpp)
+
 QT4_WRAP_UI(src mailview.ui)
 add_executable (viewmail ${src})
 

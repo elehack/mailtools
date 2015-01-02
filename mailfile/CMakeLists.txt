@@ -8,7 +8,9 @@ include(CheckIncludeFile)
 check_include_file(notmuch.h NOTMUCH_H)
 
 include_directories (BEFORE ${TCL_INCLUDE_PATH} ${GLIB_INCLUDE_DIRS})
+
 set(common_src filterscript.c message.c maildir.c logging.c strutil.c)
+
 set(app_libs ${TCL_LIBRARY} -lnotmuch -lpopt ${GLIB_LIBRARIES})
 
 add_library (mf-internals ${common_src})
@@ -16,7 +18,7 @@ add_library (mf-internals ${common_src})
 add_executable (mailfile mailfile.c)
 target_link_libraries(mailfile mf-internals ${app_libs})
 
-set(test_src test_maildir.c)
+file(GLOB test_src test_*.c)
 
 add_executable(run-tests run-tests.c ${test_src})
 target_link_libraries(run-tests mf-internals ${app_libs})
