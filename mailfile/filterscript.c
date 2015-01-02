@@ -33,6 +33,7 @@ cmd_database(ClientData data, Tcl_Interp *interp,
         Tcl_SetResult(interp, "cannot open database", NULL);
         return TCL_ERROR;
     }
+    log_debug("opened database with path %s", notmuch_database_get_path(ctx->database));
 
     return TCL_OK;
 }
