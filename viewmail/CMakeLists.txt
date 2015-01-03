@@ -5,6 +5,8 @@ include_directories (BEFORE ${MUSTACHE_SOURCE_DIR})
 include_directories (BEFORE ${GMIME_INCLUDE_DIRS})
 include_directories (BEFORE ${EXTRA_INCLUDE_DIRS})
 
+link_directories (${GMIME_LIBRARY_DIRS} ${QT_LIBRARY_DIRS})
+
 set(src main.cpp mailview.cpp htmlmail.cpp mailnetworkmanager.cpp statichttpreply.cpp)
 
 QT4_WRAP_UI(src mailview.ui)
