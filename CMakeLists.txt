@@ -10,15 +10,19 @@ include(CheckCSourceRuns)
 
 include(FindPkgConfig)
 
-find_package(Qt4 REQUIRED)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GMIME REQUIRED gmime-2.6 glib-2.0)
 
 set(ENABLE_ADDRESS_BOOK false CACHE BOOL "Enable address book code")
+set(ENABLE_GUI_PROGRAMS true CACHE BOOL "Enable GUI programs")
 
 add_subdirectory (util)
 add_subdirectory (mailfile)
-add_subdirectory (viewmail)
+
+if (${ENABLE_GUI_PROGRAMS})
+    find_package(Qt4 REQUIRED)
+    add_subdirectory (viewmail)
+endif()
 
 if(${ENABLE_ADDRESS_BOOK})
     pkg_check_modules(YAML REQUIRED yaml-cpp)
