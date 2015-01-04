@@ -2,6 +2,7 @@ language: cpp
 install:
   - sudo add-apt-repository "deb mirror://mirrors.ubuntu.com/mirrors.txt trusty main restricted universe multiverse" -y
   - sudo apt-get update -q
+  - sudo apt-get upgrade g++
   - sudo apt-get install -qy libqt4-dev libqtwebkit-dev tcl-dev libpopt-dev libgmime-2.6-dev libxapian-dev libtalloc-dev zlib1g-dev notmuch libnotmuch-dev
 script:
   - mkdir build
