@@ -1,9 +1,10 @@
 language: cpp
 install:
   - sudo apt-get update -q
-  - sudo apt-get install -qy libqt4-dev libqtwebkit-dev notmuch libnotmuch-dev tcl-dev libpopt-dev
+  - sudo apt-get install -qy libqt4-dev libqtwebkit-dev notmuch libnotmuch-dev tcl-dev libpopt-dev libgmime-2.6-dev
 script:
   - mkdir build
-  - cd build && cmake ..
+  - cd build
+  - cmake ..
   - make -C build
   - make -C build test
