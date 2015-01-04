@@ -180,7 +180,7 @@
  <connections>
   <connection>
    <sender>actionQuit</sender>
-   <signal>activated()</signal>
+   <signal>triggered()</signal>
    <receiver>MailViewWindow</receiver>
    <slot>close()</slot>
    <hints>
