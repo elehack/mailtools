@@ -18,6 +18,8 @@ int main(int argc, char *argv[])
 
     MailView w;
     w.show();
+    w.activateWindow();
+    w.raise();
 
     HTMLMailMessage* msg = new HTMLMailMessage(&w);
     if (argc <= 1) {
