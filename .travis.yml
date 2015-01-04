@@ -6,5 +6,5 @@ script:
   - mkdir build
   - cd build
   - cmake ..
-  - make -C build
-  - make -C build test
+  - make
+  - make test
