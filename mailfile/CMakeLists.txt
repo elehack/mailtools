@@ -43,5 +43,4 @@ file(GLOB test_src test_*.c)
 add_executable(run-tests run-tests.c ${test_src})
 target_link_libraries(run-tests mf-internals ${app_libs})
 
-enable_testing()
 add_test(NAME run-tests COMMAND run-tests)

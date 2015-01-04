@@ -16,6 +16,8 @@ pkg_check_modules(GMIME REQUIRED gmime-2.6 glib-2.0)
 set(ENABLE_ADDRESS_BOOK false CACHE BOOL "Enable address book code")
 set(ENABLE_GUI_PROGRAMS true CACHE BOOL "Enable GUI programs")
 
+enable_testing()
+
 add_subdirectory (util)
 add_subdirectory (mailfile)
 
