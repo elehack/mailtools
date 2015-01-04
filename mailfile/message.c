@@ -102,13 +102,13 @@ cmd_move_message(ClientData data, Tcl_Interp *interp, int argc, const char *argv
     notmuch_status_t nmrc;
 
     if (argc != 2) {
-        tcl_result_printf("wrong # of args: got %d, expected move folder", argc);
+        tcl_result_printf(interp, "wrong # of args: got %d, expected move folder", argc);
         return TCL_ERROR;
     }
     
     const char *folder = argv[1];
     if (folder[0] == '/') {
-        tcl_result_printf("invalid folder '%s'", folder);
+        tcl_result_printf(interp, "invalid folder '%s'", folder);
         return TCL_ERROR;
     }
 
