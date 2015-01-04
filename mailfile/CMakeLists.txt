@@ -1,18 +1,33 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(NOTMUCH_LIBRARY_PATH "" CACHE PATH "Path to libnotmuch")
+set(NOTMUCH_INCLUDE_PATH "" CACHE PATH "Path to notmuch.h")
+
 find_package(TCL REQUIRED)
-include(CheckLibraryExists)
-check_library_exists(notmuch notmuch_database_open "${NOTMUCH_LIBRARY_PATH}" NOTMUCH_LIB)
+
+find_library(NOTMUCH_LIBRARY notmuch
+    PATHS /usr/lib /usr/local/lib
+    DOC "Path to libnotmuch")
+find_library(POPT_LIBRARY popt
+    PATHS /usr/lib /usr/local/lib
+    DOC "Path to libpopt")
+
+if(NOT NOTMUCH_LIBRARY)
+    message(SEND_ERROR "libnotmuch was not found")
+endif()
+if(NOT POPT_LIBRARY)
+    message(SEND_ERROR "libpopt was not found")
+endif()
+
+link_directories (${GLIB_LIBRARY_DIRS})
+include_directories (BEFORE ${NOTMUCH_INCLUDE_PATH} ${TCL_INCLUDE_PATH} ${GLIB_INCLUDE_DIRS})
+
 include(CheckIncludeFile)
 check_include_file(notmuch.h NOTMUCH_H)
 
-include_directories (BEFORE ${TCL_INCLUDE_PATH} ${GLIB_INCLUDE_DIRS})
 include_directories (BEFORE ${Project_SOURCE_DIR}/util)
-
 set(common_src filterscript.c message.c strutil.c)
 
-set(app_libs mt-utils ${TCL_LIBRARY} -lnotmuch -lpopt ${GLIB_LIBRARIES})
+set(app_libs mt-utils ${TCL_LIBRARY} ${NOTMUCH_LIBRARY} ${POPT_LIBRARY} ${GLIB_LIBRARIES})
 
 add_library (mf-internals ${common_src})
 
