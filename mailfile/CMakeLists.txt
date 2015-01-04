@@ -2,7 +2,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(NOTMUCH_INCLUDE_PATH "" CACHE PATH "Path to notmuch.h")
 
-find_package(TCL REQUIRED)
+find_package(TCL)
+if(NOT TCL_FOUND)
+    message(SEND_ERROR "TCL was not found")
+endif()
 
 find_library(NOTMUCH_LIBRARY notmuch
     PATHS /usr/lib /usr/local/lib
