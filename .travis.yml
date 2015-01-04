@@ -7,6 +7,6 @@ install:
 script:
   - mkdir build
   - cd build
-  - cmake ..
+  - cmake -D CMAKE_CXX_COMPILER=g++-4.8 ..
   - make
   - make test
