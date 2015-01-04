@@ -1,7 +1,9 @@
 language: cpp
 install:
   - sudo apt-get update -q
-  - sudo apt-get install -qy libqt4-dev libqtwebkit-dev notmuch libnotmuch-dev tcl-dev libpopt-dev libgmime-2.6-dev
+  - sudo apt-get install -qy libqt4-dev libqtwebkit-dev tcl-dev libpopt-dev libgmime-2.6-dev libxapian-dev
+  - git clone -b 0.18.2 git://notmuchmail.org/git/notmuch
+  - (cd notmuch && ./configure --prefix=/usr/local && make && sudo make install)
 script:
   - mkdir build
   - cd build
