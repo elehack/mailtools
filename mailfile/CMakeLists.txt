@@ -26,6 +26,9 @@ include_directories (BEFORE ${NOTMUCH_INCLUDE_PATH} ${TCL_INCLUDE_PATH} ${GLIB_I
 
 include(CheckIncludeFile)
 check_include_file(notmuch.h NOTMUCH_H)
+if(NOT NOTMUCH_H_FOUND)
+    message(WARNING "notmuch.h was not found")
+endif()
 
 include_directories (BEFORE ${Project_SOURCE_DIR}/util)
 set(common_src filterscript.c message.c strutil.c)
