@@ -24,25 +24,6 @@ void md_setup(struct md_fixture *fix, void *data)
         perror("mkdtemp");
         abort();
     }
-    g_debug("creating temporary maildir %s", fix->maildir);
-    char *subdir = g_strdup_printf("%s/cur", fix->maildir);
-    if (mkdir(subdir, 0700)) {
-        perror(subdir);
-        abort();
-    }
-    g_free(subdir);
-    subdir = g_strdup_printf("%s/new", fix->maildir);
-    if (mkdir(subdir, 0700)) {
-        perror(subdir);
-        abort();
-    }
-    g_free(subdir);
-    subdir = g_strdup_printf("%s/tmp", fix->maildir);
-    if (mkdir(subdir, 0700)) {
-        perror(subdir);
-        abort();
-    }
-    g_free(subdir);
 
     if (maildir_init()) {
         perror("maildir_init");

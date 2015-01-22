@@ -72,6 +72,65 @@ int maildir_init(void)
     return 0;
 }
 
+static int mkdir_if_nonexistent(const char *dir)
+{
+    struct stat buf;
+    int rc = stat(dir, &buf);
+    if (rc) {
+        if (errno == ENOENT) {
+            log_debug("creating directory %s", dir);
+            // does not exist
+            if (mkdir(dir, 0777)) {
+                log_error("error creating %s: %s", dir, strerror(errno));
+                return -1;
+            }
+        } else {
+            log_error("error stat'ing %s: %s", dir, strerror(errno));
+            return -1;
+        }
+    }
+    return 0;
+}
+
+int maildir_ensure_exists(const char *mdir)
+{
+    int len, rc;
+    char *tmp;
+
+    if (mkdir_if_nonexistent(mdir)) {
+        return -1;
+    }
+
+    len = strlen(mdir);
+    tmp = malloc(len + 6);
+    memset(tmp, 0, len + 6);
+    memcpy(tmp, mdir, len);
+    // ensure trailing slash
+    if (tmp[len-1] != '/') {
+        tmp[len] = '/';
+        len += 1;
+    }
+
+    strcpy(tmp + len, "cur");
+    rc = mkdir_if_nonexistent(tmp);
+    if (rc) {
+        goto done;
+    }
+
+    strcpy(tmp + len, "tmp");
+    rc = mkdir_if_nonexistent(tmp);
+    if (rc) {
+        goto done;
+    }
+
+    strcpy(tmp + len, "new");
+    rc = mkdir_if_nonexistent(tmp);
+
+done:
+    free(tmp);
+    return rc;
+}
+
 int maildir_deliver_link(const char *src, const char *mdir, char **out_fn)
 {
     int status = -1;  // default to failure
@@ -79,6 +138,9 @@ int maildir_deliver_link(const char *src, const char *mdir, char **out_fn)
     char *tgt = NULL;
 
     log_debug("delivering file %s to maildir %s", src, mdir);
+    if (maildir_ensure_exists(mdir)) {
+        return -1;
+    }
 
     struct stat buf;
     if (stat(src, &buf)) {
