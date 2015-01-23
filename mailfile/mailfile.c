@@ -10,6 +10,18 @@
 #include "maildir.h"
 #include "filterscript.h"
 
+static void
+set_arg_list(Tcl_Interp *interp, poptContext optCon)
+{
+    Tcl_Obj *obj = Tcl_NewListObj(0, NULL);
+    const char *arg;
+
+    while ((arg = poptGetArg(optCon)) != NULL) {
+        Tcl_ListObjAppendElement(interp, obj, Tcl_NewStringObj(arg, -1));
+    }
+    Tcl_ObjSetVar2(interp, Tcl_NewStringObj("args", -1), NULL, obj, 0);
+}
+
 int main(int argc, const char *argv[])
 {
     Tcl_Interp *interp = NULL;
@@ -33,7 +45,8 @@ int main(int argc, const char *argv[])
     maildir_init();
     context = create_filter_context();
 
-    optCon = poptGetContext(NULL, argc, argv, main_options, 0);
+    optCon = poptGetContext(NULL, argc, argv, main_options,
+                            POPT_CONTEXT_POSIXMEHARDER);
     while ((opt = poptGetNextOpt(optCon)) > 0) {
         switch (opt) {
             case 'd':
@@ -52,15 +65,20 @@ int main(int argc, const char *argv[])
     }
 
     interp = create_script_interpreter(context);
+    filename = poptGetArg(optCon);
+    if (!filename) {
+        log_error("no file specified");
+        status = 1;
+        goto done;
+    }
+    set_arg_list(interp, optCon);
 
-    while ((filename = poptGetArg(optCon)) != NULL) {
-        log_info("running script %s", filename);
-        int code = Tcl_EvalFile(interp, filename);
-        if (code != TCL_OK) {
-            print_script_error(interp, code);
-            status = 1;
-            goto done;
-        }
+    log_info("running script %s", filename);
+    int code = Tcl_EvalFile(interp, filename);
+    if (code != TCL_OK) {
+        print_script_error(interp, code);
+        status = 1;
+        goto done;
     }
 
 done:
